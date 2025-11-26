@@ -11,10 +11,23 @@ import Products from "./pages/Products";
 import Sales from "./pages/Sales";
 import Expenses from "./pages/Expenses";
 import Customers from "./pages/Customers";
+import Categories from "./pages/Categories";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Documentation from "./pages/Documentation";
+import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutos - dados ficam frescos por 5 minutos
+      gcTime: 1000 * 60 * 10, // 10 minutos - cache mantido por 10 minutos após último uso
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -42,6 +55,17 @@ const App = () => (
                           <Route path="/vendas" element={<Sales />} />
                           <Route path="/despesas" element={<Expenses />} />
                           <Route path="/clientes" element={<Customers />} />
+                          <Route path="/categorias" element={<Categories />} />
+                          <Route path="/perfil" element={<Profile />} />
+                          <Route
+                            path="/documentacao"
+                            element={<Documentation />}
+                          />
+                          <Route path="/termos" element={<TermsOfService />} />
+                          <Route
+                            path="/privacidade"
+                            element={<PrivacyPolicy />}
+                          />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </main>

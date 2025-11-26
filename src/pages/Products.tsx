@@ -1,344 +1,568 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, AlertTriangle } from "lucide-react";
-import { toast } from "sonner";
-
-interface Product {
-  id: string;
-  name: string;
-  description: string | null;
-  category: string | null;
-  cost_price: number;
-  sale_price: number;
-  stock_quantity: number;
-  min_stock_quantity: number | null;
-}
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  AlertTriangle,
+  Loader2,
+  ArrowUpDown,
+  Filter,
+  X,
+} from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ProductsShimmer } from "@/components/shimmer/ProductsShimmer";
+import { CategorySelect } from "@/components/CategorySelect";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { useProductsPage } from "@/hooks/use-products-page";
 
 export default function Products() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    category: "",
-    cost_price: "",
-    sale_price: "",
-    stock_quantity: "",
-    min_stock_quantity: "5",
-  });
+  const {
+    products,
+    allProducts,
+    categories,
+    editingProduct,
+    isLoading,
+    form,
+    onSubmit,
+    dialogOpen,
+    setDialogOpen,
+    deleteDialogOpen,
+    setDeleteDialogOpen,
+    stockDialogOpen,
+    setStockDialogOpen,
+    handleOpenDialog,
+    handleCloseDialog,
+    productForStock,
+    stockAdjustment,
+    setStockAdjustment,
+    handleOpenStockDialog,
+    handleCloseStockDialog,
+    handleConfirmStockAdjustment,
+    handleDeleteClick,
+    handleConfirmDelete,
+    deleteProduct,
+    lowStockFilter,
+    setLowStockFilter,
+    categoryFilter,
+    setCategoryFilter,
+    minSalePrice,
+    setMinSalePrice,
+    maxSalePrice,
+    setMaxSalePrice,
+    minCostPrice,
+    setMinCostPrice,
+    maxCostPrice,
+    setMaxCostPrice,
+    showFilters,
+    setShowFilters,
+    hasActiveFilters,
+    clearFilters,
+    createProduct,
+    updateProduct,
+  } = useProductsPage();
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      toast.error("Erro ao carregar produtos");
-    } else {
-      setProducts(data || []);
-    }
-    setLoading(false);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const productData = {
-      name: formData.name,
-      description: formData.description || null,
-      category: formData.category || null,
-      cost_price: parseFloat(formData.cost_price),
-      sale_price: parseFloat(formData.sale_price),
-      stock_quantity: parseInt(formData.stock_quantity),
-      min_stock_quantity: parseInt(formData.min_stock_quantity),
-      user_id: user.id,
-    };
-
-    if (editingProduct) {
-      const { error } = await supabase
-        .from("products")
-        .update(productData)
-        .eq("id", editingProduct.id);
-
-      if (error) {
-        toast.error("Erro ao atualizar produto");
-      } else {
-        toast.success("Produto atualizado com sucesso");
-        setDialogOpen(false);
-        resetForm();
-        fetchProducts();
-      }
-    } else {
-      const { error } = await supabase.from("products").insert([productData]);
-
-      if (error) {
-        toast.error("Erro ao criar produto");
-      } else {
-        toast.success("Produto criado com sucesso");
-        setDialogOpen(false);
-        resetForm();
-        fetchProducts();
-      }
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este produto?")) return;
-
-    const { error } = await supabase.from("products").delete().eq("id", id);
-
-    if (error) {
-      toast.error("Erro ao excluir produto");
-    } else {
-      toast.success("Produto excluído com sucesso");
-      fetchProducts();
-    }
-  };
-
-  const handleEdit = (product: Product) => {
-    setEditingProduct(product);
-    setFormData({
-      name: product.name,
-      description: product.description || "",
-      category: product.category || "",
-      cost_price: product.cost_price.toString(),
-      sale_price: product.sale_price.toString(),
-      stock_quantity: product.stock_quantity.toString(),
-      min_stock_quantity: (product.min_stock_quantity || 5).toString(),
-    });
-    setDialogOpen(true);
-  };
-
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      description: "",
-      category: "",
-      cost_price: "",
-      sale_price: "",
-      stock_quantity: "",
-      min_stock_quantity: "5",
-    });
-    setEditingProduct(null);
-  };
-
-  if (loading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    );
+  if (isLoading) {
+    return <ProductsShimmer />;
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div
+      className="space-y-4 md:space-y-6 p-4 md:p-6 w-full"
+      style={{ maxWidth: "100vw", boxSizing: "border-box" }}
+    >
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-3xl font-bold">Produtos</h1>
-          <p className="text-muted-foreground">Gerencie seu estoque e produtos</p>
+          <p className="text-muted-foreground">
+            Gerencie seu estoque e produtos
+          </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => resetForm()}>
-              <Plus className="mr-2 h-4 w-4" />
-              Novo Produto
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>{editingProduct ? "Editar Produto" : "Novo Produto"}</DialogTitle>
-              <DialogDescription>
-                Preencha os dados do produto abaixo
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome do Produto *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                  />
+
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => handleOpenDialog()}>
+                <Plus className="mr-2 h-4 w-4" />
+                Novo Produto
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingProduct ? "Editar Produto" : "Novo Produto"}
+                </DialogTitle>
+                <DialogDescription>
+                  Preencha os dados do produto abaixo
+                </DialogDescription>
+              </DialogHeader>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
+              >
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Nome do Produto *</Label>
+                    <Input
+                      id="name"
+                      {...form.register("name")}
+                      error={form.formState.errors.name?.message}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Categoria</Label>
+                    <CategorySelect
+                      value={form.watch("category")}
+                      onChange={(value) => form.setValue("category", value)}
+                      error={form.formState.errors.category?.message}
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="category">Categoria</Label>
-                  <Input
-                    id="category"
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  <Label htmlFor="description">Descrição</Label>
+                  <Textarea
+                    id="description"
+                    {...form.register("description")}
+                    rows={3}
+                    placeholder="Descreva o produto..."
+                    error={form.formState.errors.description?.message}
                   />
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Descrição</Label>
-                <Input
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="cost_price">Preço de Custo (R$) *</Label>
-                  <Input
-                    id="cost_price"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.cost_price}
-                    onChange={(e) => setFormData({ ...formData, cost_price: e.target.value })}
-                    required
-                  />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="cost_price">Preço de Custo *</Label>
+                    <CurrencyInput
+                      id="cost_price"
+                      value={form.watch("costPrice")}
+                      onChange={(value) =>
+                        form.setValue("costPrice", value || 0, {
+                          shouldValidate: true,
+                        })
+                      }
+                      error={form.formState.errors.costPrice?.message}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="sale_price">Preço de Venda *</Label>
+                    <CurrencyInput
+                      id="sale_price"
+                      value={form.watch("salePrice")}
+                      onChange={(value) =>
+                        form.setValue("salePrice", value || 0, {
+                          shouldValidate: true,
+                        })
+                      }
+                      error={form.formState.errors.salePrice?.message}
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="sale_price">Preço de Venda (R$) *</Label>
-                  <Input
-                    id="sale_price"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.sale_price}
-                    onChange={(e) => setFormData({ ...formData, sale_price: e.target.value })}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="stock_quantity">Quantidade em Estoque *</Label>
+                  <Label htmlFor="stock_quantity">
+                    Quantidade em Estoque *
+                  </Label>
                   <Input
                     id="stock_quantity"
                     type="number"
                     min="0"
-                    value={formData.stock_quantity}
-                    onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
-                    required
+                    {...form.register("stockQuantity", { valueAsNumber: true })}
+                    error={form.formState.errors.stockQuantity?.message}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="min_stock_quantity">Estoque Mínimo</Label>
-                  <Input
-                    id="min_stock_quantity"
-                    type="number"
-                    min="0"
-                    value={formData.min_stock_quantity}
-                    onChange={(e) => setFormData({ ...formData, min_stock_quantity: e.target.value })}
-                  />
+                <div className="flex justify-end gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCloseDialog}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={
+                      createProduct.isPending || updateProduct.isPending
+                    }
+                  >
+                    {createProduct.isPending || updateProduct.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {editingProduct ? "Atualizando..." : "Criando..."}
+                      </>
+                    ) : (
+                      <>{editingProduct ? "Atualizar" : "Criar"} Produto</>
+                    )}
+                  </Button>
                 </div>
-              </div>
-              <div className="flex justify-end gap-3">
-                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button type="submit">
-                  {editingProduct ? "Atualizar" : "Criar"} Produto
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          <Button
+            variant="outline"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="mr-2 h-4 w-4" />
+            Filtros
+            {hasActiveFilters && (
+              <Badge variant="secondary" className="ml-2">
+                {
+                  [
+                    lowStockFilter !== null,
+                    categoryFilter,
+                    minSalePrice !== null,
+                    maxSalePrice !== null,
+                    minCostPrice !== null,
+                    maxCostPrice !== null,
+                  ].filter(Boolean).length
+                }
+              </Badge>
+            )}
+          </Button>
+        </div>
       </div>
+
+      {showFilters && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Filter className="h-5 w-5" />
+                Filtros
+              </CardTitle>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  <X className="mr-2 h-4 w-4" />
+                  Limpar Filtros
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="space-y-2">
+                <Label>Estoque Baixo</Label>
+                <Select
+                  value={
+                    lowStockFilter === null
+                      ? "all"
+                      : lowStockFilter
+                      ? "yes"
+                      : "no"
+                  }
+                  onValueChange={(value) => {
+                    setLowStockFilter(value === "all" ? null : value === "yes");
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="yes">
+                      Apenas com estoque baixo
+                    </SelectItem>
+                    <SelectItem value="no">Apenas com estoque</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Categoria</Label>
+                <SearchableSelect
+                  value={categoryFilter}
+                  onChange={(value) => setCategoryFilter(value)}
+                  options={[
+                    { value: "all", label: "Todas" },
+                    { value: "sem_categoria", label: "Sem categoria" },
+                    ...categories.map((cat) => ({
+                      value: cat.name,
+                      label: cat.name,
+                    })),
+                  ]}
+                  placeholder="Todas as categorias"
+                  searchPlaceholder="Buscar categoria..."
+                  emptyMessage="Nenhuma categoria encontrada."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Preço de Venda Mínimo</Label>
+                <CurrencyInput
+                  value={minSalePrice || 0}
+                  onChange={(value) => setMinSalePrice(value || null)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Preço de Venda Máximo</Label>
+                <CurrencyInput
+                  value={maxSalePrice || 0}
+                  onChange={(value) => setMaxSalePrice(value || null)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Preço de Custo Mínimo</Label>
+                <CurrencyInput
+                  value={minCostPrice || 0}
+                  onChange={(value) => setMinCostPrice(value || null)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Preço de Custo Máximo</Label>
+                <CurrencyInput
+                  value={maxCostPrice || 0}
+                  onChange={(value) => setMaxCostPrice(value || null)}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
           <CardTitle>Lista de Produtos</CardTitle>
           <CardDescription>
-            {products.length} produto(s) cadastrado(s)
+            {products.length} de {allProducts.length} produto(s) cadastrado(s)
+            {hasActiveFilters && " (filtros aplicados)"}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 sm:p-6 sm:pt-0">
           {products.length === 0 ? (
-            <div className="py-12 text-center text-muted-foreground">
-              Nenhum produto cadastrado ainda
+            <div className="py-12 text-center text-muted-foreground px-6">
+              {hasActiveFilters
+                ? "Nenhum produto encontrado com os filtros aplicados"
+                : "Nenhum produto cadastrado ainda"}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Produto</TableHead>
-                  <TableHead>Categoria</TableHead>
-                  <TableHead>Preço Venda</TableHead>
-                  <TableHead>Estoque</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {products.map((product) => {
-                  const isLowStock = product.stock_quantity <= (product.min_stock_quantity || 5);
-                  return (
-                    <TableRow key={product.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{product.name}</div>
-                          {product.description && (
-                            <div className="text-sm text-muted-foreground">{product.description}</div>
+            <div className="w-full overflow-x-auto px-6 sm:px-0">
+              <Table className="min-w-[600px] w-full">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Produto</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead>Preço Venda</TableHead>
+                    <TableHead>Estoque</TableHead>
+                    <TableHead className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <span>Ações</span>
+                      </div>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {products.map((product) => {
+                    const isLowStock = product.stockQuantity <= 0;
+                    return (
+                      <TableRow key={product.id}>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{product.name}</div>
+                            {product.description && (
+                              <div className="text-sm text-muted-foreground line-clamp-2">
+                                {product.description}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {product.category ? (
+                            <Badge variant="outline">{product.category}</Badge>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
                           )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {product.category ? (
-                          <Badge variant="outline">{product.category}</Badge>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.sale_price)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span className={isLowStock ? 'text-warning font-medium' : ''}>
-                            {product.stock_quantity}
-                          </span>
-                          {isLowStock && (
-                            <AlertTriangle className="h-4 w-4 text-warning" />
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(product)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(product.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                        </TableCell>
+                        <TableCell>
+                          {new Intl.NumberFormat("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          }).format(product.salePrice)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={
+                                isLowStock ? "text-warning font-medium" : ""
+                              }
+                            >
+                              {product.stockQuantity}
+                            </span>
+                            {isLowStock && (
+                              <AlertTriangle className="h-4 w-4 text-warning" />
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              className="flex-1 w-40 max-w-40"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleOpenStockDialog(product.id)}
+                              title="Ajustar estoque do produto"
+                            >
+                              Ajustar estoque
+                              <ArrowUpDown className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleOpenDialog(product.id)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteClick(product.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este produto? Esta ação não pode
+              ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteProduct.isPending}
+            >
+              {deleteProduct.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Excluindo...
+                </>
+              ) : (
+                "Excluir"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog de Ajuste de Estoque */}
+      <Dialog open={stockDialogOpen} onOpenChange={setStockDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ajustar Estoque</DialogTitle>
+            <DialogDescription>
+              Ajuste a quantidade em estoque do produto
+            </DialogDescription>
+          </DialogHeader>
+          {productForStock &&
+            (() => {
+              const product = allProducts.find((p) => p.id === productForStock);
+              if (!product) return null;
+
+              return (
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm font-medium mb-2">
+                      Produto: {product.name}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Estoque atual: <strong>{product.stockQuantity}</strong>
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="adjustment">
+                      Ajuste (positivo para adicionar, negativo para remover)
+                    </Label>
+                    <Input
+                      id="adjustment"
+                      type="number"
+                      value={stockAdjustment}
+                      onChange={(e) =>
+                        setStockAdjustment(parseInt(e.target.value) || 0)
+                      }
+                      placeholder="Ex: +10 ou -5"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Novo estoque:{" "}
+                      <strong>{product.stockQuantity + stockAdjustment}</strong>
+                    </p>
+                  </div>
+                  <div className="flex justify-end gap-3">
+                    <Button variant="outline" onClick={handleCloseStockDialog}>
+                      Cancelar
+                    </Button>
+                    <Button
+                      onClick={handleConfirmStockAdjustment}
+                      disabled={updateProduct.isPending}
+                    >
+                      {updateProduct.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Ajustando...
+                        </>
+                      ) : (
+                        "Confirmar Ajuste"
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              );
+            })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
