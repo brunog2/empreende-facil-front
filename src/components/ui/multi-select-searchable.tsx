@@ -110,7 +110,7 @@ export function MultiSelectSearchable({
         <PopoverContent className="w-full p-0" align="start">
           <Command>
             <CommandInput placeholder={searchPlaceholder} />
-            <CommandList>
+            <CommandList className="max-h-[300px] overflow-y-auto">
               <CommandEmpty>{emptyMessage}</CommandEmpty>
               <CommandGroup>
                 {options.map((option) => {

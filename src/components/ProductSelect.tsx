@@ -110,7 +110,7 @@ export function ProductSelect({ value, onChange, error }: ProductSelectProps) {
         <PopoverContent className="w-full p-0 z-[60]" align="start">
           <Command>
             <CommandInput placeholder="Buscar produto..." />
-            <CommandList>
+            <CommandList className="max-h-[300px] overflow-y-auto">
               <CommandEmpty>
                 <div className="py-6 text-center text-sm">
                   <p className="mb-2">Nenhum produto encontrado.</p>

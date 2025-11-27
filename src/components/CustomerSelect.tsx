@@ -96,7 +96,7 @@ export function CustomerSelect({ value, onChange, error }: CustomerSelectProps) 
         <PopoverContent className="w-full p-0" align="start">
           <Command>
             <CommandInput placeholder="Buscar cliente..." />
-            <CommandList>
+            <CommandList className="max-h-[300px] overflow-y-auto">
               <CommandEmpty>
                 <div className="py-6 text-center text-sm">
                   <p className="mb-2">Nenhum cliente encontrado.</p>

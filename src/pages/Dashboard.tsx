@@ -145,9 +145,9 @@ export default function Dashboard() {
     // Filtro de categoria (multi-select)
     if (categoryFilter.length > 0) {
       const hasSemCategoria = categoryFilter.includes("sem_categoria");
-      filtered = filtered.filter((sale) => {
-        return sale.saleItems.some((item) => {
-          const product = products.find((p) => p.id === item.productId);
+        filtered = filtered.filter((sale) => {
+          return sale.saleItems.some((item) => {
+            const product = products.find((p) => p.id === item.productId);
           if (!product) return false;
           
           // Buscar o nome da categoria do produto
@@ -162,15 +162,15 @@ export default function Dashboard() {
           if (!productCategoryName) {
             // Produto sem categoria
             return hasSemCategoria;
-          } else {
+      } else {
             // Produto com categoria - verificar se está na lista de filtros
             return categoryFilter.some((filterCat) => {
               if (filterCat === "sem_categoria") return false;
               return productCategoryName === filterCat;
             });
           }
+          });
         });
-      });
     }
 
     // Filtro de produto (multi-select)
@@ -558,8 +558,8 @@ export default function Dashboard() {
                     value={productFilter}
                     onChange={(value) => setProductFilter(value)}
                     options={products.map((prod) => ({
-                      value: prod.id,
-                      label: prod.name,
+                        value: prod.id,
+                        label: prod.name,
                     }))}
                     placeholder="Selecione produtos..."
                     searchPlaceholder="Buscar produto..."

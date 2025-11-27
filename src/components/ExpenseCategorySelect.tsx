@@ -98,7 +98,7 @@ export function ExpenseCategorySelect({
         <PopoverContent className="w-full p-0" align="start">
           <Command>
             <CommandInput placeholder="Buscar categoria..." />
-            <CommandList>
+            <CommandList className="max-h-[300px] overflow-y-auto">
               <CommandEmpty>
                 <div className="py-6 text-center text-sm">
                   <p className="mb-2">Nenhuma categoria encontrada.</p>
