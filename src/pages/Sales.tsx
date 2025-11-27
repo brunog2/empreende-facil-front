@@ -190,7 +190,7 @@ export default function Sales() {
               Nova Venda
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-4xl sm:max-h-[90vh] flex flex-col">
+          <DialogContent className="sm:max-w-4xl sm:max-h-[90vh] sm:min-h-[600px] flex flex-col">
             <DialogHeader className="flex-shrink-0">
               <DialogTitle>
                 {editingSale ? "Editar Venda" : "Nova Venda"}
@@ -201,7 +201,7 @@ export default function Sales() {
                   : "Adicione os produtos vendidos"}
               </DialogDescription>
             </DialogHeader>
-            <div className="flex-1 min-h-0 -mx-3 sm:-mx-6 px-3 sm:px-6 sm:overflow-y-auto">
+            <div className="flex-1 min-h-[400px] -mx-3 sm:-mx-6 px-3 sm:px-6 sm:overflow-y-auto">
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-3 sm:space-y-4"
@@ -425,17 +425,17 @@ export default function Sales() {
                   />
                 </div>
 
-              <div className="flex items-center justify-between rounded-lg border p-3 sm:p-4 bg-muted/50">
-                <span className="font-semibold text-sm sm:text-base">
-                  Total:
-                </span>
-                <span className="text-xl sm:text-2xl font-bold text-primary">
-                  {new Intl.NumberFormat("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  }).format(calculateTotal())}
-                </span>
-              </div>
+                <div className="flex items-center justify-between rounded-lg border p-3 sm:p-4 bg-muted/50">
+                  <span className="font-semibold text-sm sm:text-base">
+                    Total:
+                  </span>
+                  <span className="text-xl sm:text-2xl font-bold text-primary">
+                    {new Intl.NumberFormat("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    }).format(calculateTotal())}
+                  </span>
+                </div>
               </form>
             </div>
             <div className="flex-shrink-0 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-2 border-t mt-2">
