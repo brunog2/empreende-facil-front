@@ -89,7 +89,9 @@ export function CustomerSelect({ value, onChange, error }: CustomerSelectProps) 
             )}
             disabled={isLoading}
           >
-            {selectedCustomer ? selectedCustomer.name : "Selecione um cliente (opcional)"}
+            <span className="truncate">
+              {selectedCustomer ? selectedCustomer.name : "Selecione um cliente"}
+            </span>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
