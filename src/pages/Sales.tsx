@@ -190,8 +190,8 @@ export default function Sales() {
               Nova Venda
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-4xl">
-            <DialogHeader>
+          <DialogContent className="sm:max-w-4xl sm:max-h-[90vh]">
+            <DialogHeader className="flex-shrink-0">
               <DialogTitle>
                 {editingSale ? "Editar Venda" : "Nova Venda"}
               </DialogTitle>
@@ -203,7 +203,7 @@ export default function Sales() {
             </DialogHeader>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-3 sm:space-y-4"
+              className="space-y-3 sm:space-y-4 flex-1 min-h-0 overflow-y-auto"
             >
               <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="space-y-2">
