@@ -52,7 +52,13 @@ export function CategorySelect({ value, onChange, error }: CategorySelectProps) 
 
   const selectedCategory = categories.find((cat) => cat.id === value || cat.name === value);
 
-  const handleCreateCategory = async (data: CategoryFormData) => {
+  const handleCreateCategory = async (data: CategoryFormData, e?: React.BaseSyntheticEvent) => {
+    // Prevenir propagação do evento para não submeter formulários pais
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     try {
       const newCategory = await createCategory.mutateAsync(data);
       // Usar o ID da categoria para manter consistência com o backend
@@ -195,7 +201,14 @@ export function CategorySelect({ value, onChange, error }: CategorySelectProps) 
               Crie uma nova categoria para seus produtos
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={form.handleSubmit(handleCreateCategory)} className="space-y-4">
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              form.handleSubmit(handleCreateCategory)(e);
+            }} 
+            className="space-y-4"
+          >
             <div className="space-y-2">
               <Label htmlFor="category-name">Nome da Categoria *</Label>
               <Input

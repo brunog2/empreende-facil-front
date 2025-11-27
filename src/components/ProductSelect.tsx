@@ -58,7 +58,13 @@ export function ProductSelect({ value, onChange, error }: ProductSelectProps) {
     },
   });
 
-  const handleCreateProduct = async (data: ProductFormData) => {
+  const handleCreateProduct = async (data: ProductFormData, e?: React.BaseSyntheticEvent) => {
+    // Prevenir propagação do evento para não submeter formulários pais
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     try {
       const newProduct = await createProduct.mutateAsync({
         name: data.name,
@@ -192,7 +198,14 @@ export function ProductSelect({ value, onChange, error }: ProductSelectProps) {
               Crie um novo produto rapidamente
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={form.handleSubmit(handleCreateProduct)} className="space-y-4">
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              form.handleSubmit(handleCreateProduct)(e);
+            }} 
+            className="space-y-4"
+          >
             <div className="space-y-2">
               <Label htmlFor="product-name">Nome do Produto *</Label>
               <Input
