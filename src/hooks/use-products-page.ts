@@ -24,11 +24,18 @@ const productSchema = z.object({
     .min(0, "O preço de venda deve ser maior ou igual a zero"),
   stockQuantity: z.coerce
     .number()
-    .int()
     .min(0, "A quantidade em estoque deve ser maior ou igual a zero"),
 });
 
 export type ProductFormData = z.infer<typeof productSchema>;
+
+const stockAdjustmentSchema = z.object({
+  stockQuantity: z.coerce
+    .number()
+    .min(0, "A quantidade em estoque deve ser maior ou igual a zero"),
+});
+
+export type StockAdjustmentFormData = z.infer<typeof stockAdjustmentSchema>;
 
 export function useProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -38,11 +45,10 @@ export function useProductsPage() {
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [productForStock, setProductForStock] = useState<string | null>(null);
-  const [stockAdjustment, setStockAdjustment] = useState<number>(0);
 
   // Filtros
   const [lowStockFilter, setLowStockFilter] = useState<boolean | null>(null);
-  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [minSalePrice, setMinSalePrice] = useState<number | null>(null);
   const [maxSalePrice, setMaxSalePrice] = useState<number | null>(null);
   const [minCostPrice, setMinCostPrice] = useState<number | null>(null);
@@ -76,6 +82,13 @@ export function useProductsPage() {
       category: null,
       costPrice: 0,
       salePrice: 0,
+      stockQuantity: 0,
+    },
+  });
+
+  const stockForm = useForm<StockAdjustmentFormData>({
+    resolver: zodResolver(stockAdjustmentSchema),
+    defaultValues: {
       stockQuantity: 0,
     },
   });
@@ -162,32 +175,41 @@ export function useProductsPage() {
   };
 
   const handleOpenStockDialog = (productId: string) => {
+    const product = products.find((p) => p.id === productId);
     setProductForStock(productId);
-    setStockAdjustment(0);
     setStockDialogOpen(true);
+
+    // Configurar o form com o estoque atual do produto
+    if (product) {
+      const initialQuantity = product.stockQuantity;
+      stockForm.reset({
+        stockQuantity: initialQuantity,
+      });
+    }
   };
 
   const handleCloseStockDialog = () => {
     setStockDialogOpen(false);
     setProductForStock(null);
-    setStockAdjustment(0);
+    stockForm.reset({
+      stockQuantity: 0,
+    });
   };
 
-  const handleConfirmStockAdjustment = async () => {
-    if (productForStock) {
-      const product = products.find((p) => p.id === productForStock);
-      if (product) {
-        try {
-          await updateProduct.mutateAsync({
-            id: productForStock,
-            data: {
-              stockQuantity: product.stockQuantity + stockAdjustment,
-            },
-          });
-          handleCloseStockDialog();
-        } catch (error) {
-          // Erro já é tratado pelo hook
-        }
+  const handleConfirmStockAdjustment = async (
+    data: StockAdjustmentFormData
+  ) => {
+    if (productForStock && data.stockQuantity >= 0) {
+      try {
+        await updateProduct.mutateAsync({
+          id: productForStock,
+          data: {
+            stockQuantity: data.stockQuantity,
+          },
+        });
+        handleCloseStockDialog();
+      } catch (error) {
+        // Erro já é tratado pelo hook
       }
     }
   };
@@ -200,11 +222,30 @@ export function useProductsPage() {
     ) {
       return false;
     }
-    if (categoryFilter && categoryFilter !== "all") {
-      if (categoryFilter === "sem_categoria") {
-        if (product.category) return false;
-      } else {
-        if (product.category !== categoryFilter) return false;
+    if (categoryFilter.length > 0) {
+      // Buscar o nome da categoria do produto
+      const productCategoryName = product.category
+        ? categories.find(
+            (cat) =>
+              cat.id === product.category || cat.name === product.category
+          )?.name || product.category
+        : null;
+
+      // Verificar se o produto passa no filtro
+      const hasSemCategoria = categoryFilter.includes("sem_categoria");
+      const hasCategoryMatch = categoryFilter.some((filterCat) => {
+        if (filterCat === "sem_categoria") return false;
+        return productCategoryName === filterCat;
+      });
+
+      // Produto passa se:
+      // - Não tem categoria E "sem_categoria" está selecionado
+      // - Tem categoria E está na lista de categorias selecionadas
+      if (!productCategoryName && !hasSemCategoria) {
+        return false; // Produto sem categoria mas filtro não inclui "sem_categoria"
+      }
+      if (productCategoryName && !hasCategoryMatch) {
+        return false; // Produto tem categoria mas não está nas selecionadas
       }
     }
     if (minSalePrice !== null && product.salePrice < minSalePrice) {
@@ -224,7 +265,7 @@ export function useProductsPage() {
 
   const hasActiveFilters =
     lowStockFilter !== null ||
-    (categoryFilter && categoryFilter !== "all") ||
+    categoryFilter.length > 0 ||
     minSalePrice !== null ||
     maxSalePrice !== null ||
     minCostPrice !== null ||
@@ -232,7 +273,7 @@ export function useProductsPage() {
 
   const clearFilters = () => {
     setLowStockFilter(null);
-    setCategoryFilter(null);
+    setCategoryFilter([]);
     setMinSalePrice(null);
     setMaxSalePrice(null);
     setMinCostPrice(null);
@@ -246,11 +287,11 @@ export function useProductsPage() {
     categories,
     editingProduct,
     isLoading,
-    
+
     // Form
     form,
     onSubmit,
-    
+
     // Dialogs
     dialogOpen,
     setDialogOpen,
@@ -260,20 +301,19 @@ export function useProductsPage() {
     setStockDialogOpen,
     handleOpenDialog,
     handleCloseDialog,
-    
+
     // Stock Dialog
     productForStock,
-    stockAdjustment,
-    setStockAdjustment,
+    stockForm,
     handleOpenStockDialog,
     handleCloseStockDialog,
     handleConfirmStockAdjustment,
-    
+
     // Delete
     handleDeleteClick,
     handleConfirmDelete,
     deleteProduct,
-    
+
     // Filters
     lowStockFilter,
     setLowStockFilter,
@@ -291,10 +331,9 @@ export function useProductsPage() {
     setShowFilters,
     hasActiveFilters,
     clearFilters,
-    
+
     // Mutations
     createProduct,
     updateProduct,
   };
 }
-

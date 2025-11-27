@@ -16,8 +16,8 @@ const saleItemSchema = z.object({
   productId: z.string().min(1, "Selecione um produto"),
   quantity: z.coerce
     .number()
-    .int()
-    .min(1, "A quantidade deve ser pelo menos 1"),
+    .positive("A quantidade deve ser maior que zero")
+    .min(0.01, "A quantidade deve ser pelo menos 0.01"),
   unitPrice: z.coerce
     .number()
     .min(0, "O preço unitário deve ser maior ou igual a zero"),

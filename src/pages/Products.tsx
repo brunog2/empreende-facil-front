@@ -45,6 +45,7 @@ import {
   ArrowUpDown,
   Filter,
   X,
+  Minus,
 } from "lucide-react";
 import {
   Select,
@@ -57,6 +58,7 @@ import { ProductsShimmer } from "@/components/shimmer/ProductsShimmer";
 import { CategorySelect } from "@/components/CategorySelect";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { MultiSelectSearchable } from "@/components/ui/multi-select-searchable";
 import { useProductsPage } from "@/hooks/use-products-page";
 
 export default function Products() {
@@ -77,8 +79,7 @@ export default function Products() {
     handleOpenDialog,
     handleCloseDialog,
     productForStock,
-    stockAdjustment,
-    setStockAdjustment,
+    stockForm,
     handleOpenStockDialog,
     handleCloseStockDialog,
     handleConfirmStockAdjustment,
@@ -206,6 +207,7 @@ export default function Products() {
                   <Input
                     id="stock_quantity"
                     type="number"
+                    step="0.001"
                     min="0"
                     {...form.register("stockQuantity", { valueAsNumber: true })}
                     error={form.formState.errors.stockQuantity?.message}
@@ -309,11 +311,10 @@ export default function Products() {
               </div>
               <div className="space-y-2">
                 <Label>Categoria</Label>
-                <SearchableSelect
+                <MultiSelectSearchable
                   value={categoryFilter}
                   onChange={(value) => setCategoryFilter(value)}
                   options={[
-                    { value: "all", label: "Todas" },
                     { value: "sem_categoria", label: "Sem categoria" },
                     ...categories.map((cat) => ({
                       value: cat.name,
@@ -380,7 +381,9 @@ export default function Products() {
                   <TableRow>
                     <TableHead>Produto</TableHead>
                     <TableHead>Categoria</TableHead>
+                    <TableHead>Preço Custo</TableHead>
                     <TableHead>Preço Venda</TableHead>
+                    <TableHead>Lucro Unitário</TableHead>
                     <TableHead>Estoque</TableHead>
                     <TableHead className="text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -392,6 +395,20 @@ export default function Products() {
                 <TableBody>
                   {products.map((product) => {
                     const isLowStock = product.stockQuantity <= 0;
+                    // Buscar o nome da categoria pelo ID
+                    const categoryName = product.category
+                      ? categories.find(
+                          (cat) =>
+                            cat.id === product.category ||
+                            cat.name === product.category
+                        )?.name || product.category
+                      : null;
+                    // Calcular lucro
+                    const profit = product.salePrice - product.costPrice;
+                    const profitPercentage =
+                      product.costPrice > 0
+                        ? ((profit / product.costPrice) * 100).toFixed(1)
+                        : "0";
                     return (
                       <TableRow key={product.id}>
                         <TableCell>
@@ -405,8 +422,8 @@ export default function Products() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          {product.category ? (
-                            <Badge variant="outline">{product.category}</Badge>
+                          {categoryName ? (
+                            <Badge variant="outline">{categoryName}</Badge>
                           ) : (
                             <span className="text-muted-foreground">-</span>
                           )}
@@ -415,7 +432,32 @@ export default function Products() {
                           {new Intl.NumberFormat("pt-BR", {
                             style: "currency",
                             currency: "BRL",
+                          }).format(product.costPrice)}
+                        </TableCell>
+                        <TableCell>
+                          {new Intl.NumberFormat("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
                           }).format(product.salePrice)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span
+                              className={
+                                profit >= 0
+                                  ? "text-success font-medium"
+                                  : "text-destructive font-medium"
+                              }
+                            >
+                              {new Intl.NumberFormat("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              }).format(profit)}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              ({profitPercentage}%)
+                            </span>
+                          </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
@@ -424,7 +466,13 @@ export default function Products() {
                                 isLowStock ? "text-warning font-medium" : ""
                               }
                             >
-                              {product.stockQuantity}
+                              {Number(product.stockQuantity).toLocaleString(
+                                "pt-BR",
+                                {
+                                  minimumFractionDigits: 0,
+                                  maximumFractionDigits: 3,
+                                }
+                              )}
                             </span>
                             {isLowStock && (
                               <AlertTriangle className="h-4 w-4 text-warning" />
@@ -512,41 +560,115 @@ export default function Products() {
               const product = allProducts.find((p) => p.id === productForStock);
               if (!product) return null;
 
+              const currentStock = stockForm.watch("stockQuantity") || 0;
+
               return (
-                <div className="space-y-4">
+                <form
+                  onSubmit={stockForm.handleSubmit(
+                    handleConfirmStockAdjustment
+                  )}
+                  className="space-y-4"
+                >
                   <div>
                     <p className="text-sm font-medium mb-2">
                       Produto: {product.name}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Estoque atual: <strong>{product.stockQuantity}</strong>
+                      Estoque atual:{" "}
+                      <strong>
+                        {product.stockQuantity.toLocaleString("pt-BR", {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 3,
+                        })}
+                      </strong>
                     </p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="adjustment">
-                      Ajuste (positivo para adicionar, negativo para remover)
+                    <Label htmlFor="stock-quantity">
+                      Quantidade em Estoque
                     </Label>
-                    <Input
-                      id="adjustment"
-                      type="number"
-                      value={stockAdjustment}
-                      onChange={(e) =>
-                        setStockAdjustment(parseInt(e.target.value) || 0)
-                      }
-                      placeholder="Ex: +10 ou -5"
-                    />
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const currentValue = currentStock || 0;
+                          const newValue = Math.max(
+                            0,
+                            Number(currentValue) - 1
+                          );
+                          stockForm.setValue("stockQuantity", newValue, {
+                            shouldValidate: true,
+                          });
+                        }}
+                        disabled={currentStock <= 0}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <Input
+                        id="stock-quantity"
+                        type="number"
+                        step="0.001"
+                        min="0"
+                        {...stockForm.register("stockQuantity", {
+                          valueAsNumber: true,
+                        })}
+                        className="text-center"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const currentValue = currentStock || 0;
+                          const newValue = Number(currentValue) + 1;
+                          console.log(newValue);
+                          stockForm.setValue("stockQuantity", newValue, {
+                            shouldValidate: true,
+                          });
+                        }}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    {stockForm.formState.errors.stockQuantity && (
+                      <p className="text-sm text-destructive">
+                        {stockForm.formState.errors.stockQuantity.message}
+                      </p>
+                    )}
                     <p className="text-sm text-muted-foreground">
-                      Novo estoque:{" "}
-                      <strong>{product.stockQuantity + stockAdjustment}</strong>
+                      Estoque atual:{" "}
+                      <strong>
+                        {product.stockQuantity.toLocaleString("pt-BR", {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 3,
+                        })}
+                      </strong>{" "}
+                      → Novo estoque:{" "}
+                      <strong>
+                        {currentStock.toLocaleString("pt-BR", {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 3,
+                        })}
+                      </strong>
                     </p>
                   </div>
                   <div className="flex justify-end gap-3">
-                    <Button variant="outline" onClick={handleCloseStockDialog}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleCloseStockDialog}
+                    >
                       Cancelar
                     </Button>
                     <Button
-                      onClick={handleConfirmStockAdjustment}
-                      disabled={updateProduct.isPending}
+                      type="submit"
+                      disabled={updateProduct.isPending || currentStock < 0}
                     >
                       {updateProduct.isPending ? (
                         <>
@@ -558,7 +680,7 @@ export default function Products() {
                       )}
                     </Button>
                   </div>
-                </div>
+                </form>
               );
             })()}
         </DialogContent>

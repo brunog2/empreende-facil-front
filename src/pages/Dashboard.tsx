@@ -829,7 +829,10 @@ export default function Dashboard() {
                         <div>
                           <p className="font-medium">{product.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            Estoque: {product.stockQuantity}
+                            Estoque: {product.stockQuantity.toLocaleString('pt-BR', {
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 3,
+                            })}
                           </p>
                         </div>
                       </div>

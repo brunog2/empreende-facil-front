@@ -30,7 +30,7 @@ const productSchema = z.object({
   category: z.string().optional().nullable(),
   costPrice: z.coerce.number().min(0, "O preço de custo deve ser maior ou igual a zero"),
   salePrice: z.coerce.number().min(0, "O preço de venda deve ser maior ou igual a zero"),
-  stockQuantity: z.coerce.number().int().min(0, "A quantidade em estoque deve ser maior ou igual a zero"),
+  stockQuantity: z.coerce.number().min(0, "A quantidade em estoque deve ser maior ou igual a zero"),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
@@ -99,7 +99,10 @@ export function ProductSelect({ value, onChange, error }: ProductSelectProps) {
             )}
           >
             {selectedProduct
-              ? `${selectedProduct.name} ${selectedProduct.stockQuantity <= 0 ? "(Sem estoque)" : `(Estoque: ${selectedProduct.stockQuantity})`}`
+              ? `${selectedProduct.name} ${selectedProduct.stockQuantity <= 0 ? "(Sem estoque)" : `(Estoque: ${selectedProduct.stockQuantity.toLocaleString('pt-BR', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 3,
+              })})`}`
               : "Selecione um produto"}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
@@ -145,7 +148,10 @@ export function ProductSelect({ value, onChange, error }: ProductSelectProps) {
                           value === product.id ? "opacity-100" : "opacity-0"
                         )}
                       />
-                      {product.name} {isOutOfStock ? "(Sem estoque)" : `(Estoque: ${product.stockQuantity})`}
+                      {product.name} {isOutOfStock ? "(Sem estoque)" : `(Estoque: ${product.stockQuantity.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 3,
+                      })})`}
                     </CommandItem>
                   );
                 })}
@@ -245,6 +251,7 @@ export function ProductSelect({ value, onChange, error }: ProductSelectProps) {
               <Input
                 id="product-stock"
                 type="number"
+                step="0.01"
                 min="0"
                 {...form.register("stockQuantity", { valueAsNumber: true })}
                 error={form.formState.errors.stockQuantity?.message}

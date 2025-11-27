@@ -248,7 +248,8 @@ export default function Sales() {
                         <Label>Qtd</Label>
                         <Input
                           type="number"
-                          min="1"
+                          step="0.01"
+                          min="0.01"
                           value={quantityInputs[index] ?? item?.quantity ?? ""}
                           onChange={(e) => {
                             const value = e.target.value;
@@ -259,7 +260,7 @@ export default function Sales() {
                             }));
                             // Atualiza o form apenas se o valor for válido
                             if (value !== "") {
-                              const numValue = parseInt(value, 10);
+                              const numValue = parseFloat(value);
                               if (!isNaN(numValue) && numValue > 0) {
                                 form.setValue(
                                   `items.${index}.quantity` as any,
@@ -271,9 +272,9 @@ export default function Sales() {
                           }}
                           onBlur={(e) => {
                             const value = e.target.value;
-                            const numValue = parseInt(value, 10);
+                            const numValue = parseFloat(value);
                             const finalValue =
-                              value === "" || isNaN(numValue) || numValue < 1
+                              value === "" || isNaN(numValue) || numValue < 0.01
                                 ? 1
                                 : numValue;
                             // Atualiza o form e o estado local
@@ -433,7 +434,7 @@ export default function Sales() {
                               );
                               return (
                                 <div key={idx} className="text-sm">
-                                  {product?.name || "Produto desconhecido"} x
+                                  {product?.name || "Produto desconhecido"} x{" "}
                                   {item.quantity}
                                 </div>
                               );
