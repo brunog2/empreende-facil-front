@@ -1,73 +1,321 @@
-# Welcome to your Lovable project
+# Empreende Fácil - Frontend
 
-## Project info
+Frontend React para a aplicação de gestão empresarial Empreende Fácil.
 
-**URL**: https://lovable.dev/projects/24aa7e13-cd97-40cd-a8f2-916af0a48e47
+## Tecnologias
 
-## How can I edit this code?
+- **React 18** - Biblioteca JavaScript para interfaces
+- **TypeScript** - Tipagem estática
+- **Vite** - Build tool e dev server
+- **React Router** - Roteamento
+- **React Hook Form** - Gerenciamento de formulários
+- **Zod** - Validação de schemas
+- **TanStack Query (React Query)** - Gerenciamento de estado e cache
+- **Axios** - Cliente HTTP
+- **shadcn/ui** - Componentes UI
+- **Tailwind CSS** - Estilização
+- **Recharts** - Gráficos e visualizações
+- **date-fns** - Manipulação de datas
+- **Sonner** - Notificações toast
 
-There are several ways of editing your application.
+## Configuração
 
-**Use Lovable**
+### 1. Instalar dependências
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/24aa7e13-cd97-40cd-a8f2-916af0a48e47) and start prompting.
+```bash
+npm install
+```
 
-Changes made via Lovable will be committed automatically to this repo.
+### 2. Configurar variáveis de ambiente
 
-**Use your preferred IDE**
+Crie um arquivo `.env` na raiz do projeto:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```env
+VITE_API_URL=http://localhost:3000/api
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 3. Iniciar servidor de desenvolvimento
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+A aplicação estará disponível em `http://localhost:5173`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### 4. Build para produção
 
-**Use GitHub Codespaces**
+```bash
+npm run build
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Os arquivos serão gerados na pasta `dist/`
 
-## What technologies are used for this project?
+## Estrutura do Projeto
 
-This project is built with:
+```
+src/
+├── components/          # Componentes reutilizáveis
+│   ├── ui/            # Componentes base (shadcn/ui)
+│   ├── CategorySelect.tsx
+│   ├── ProductSelect.tsx
+│   ├── CustomerSelect.tsx
+│   └── ...
+├── hooks/              # Custom hooks
+│   ├── use-auth.ts
+│   ├── use-products.ts
+│   ├── use-sales.ts
+│   └── ...
+├── pages/              # Páginas da aplicação
+│   ├── Dashboard.tsx
+│   ├── Products.tsx
+│   ├── Sales.tsx
+│   ├── Customers.tsx
+│   ├── Categories.tsx
+│   ├── Expenses.tsx
+│   └── ProductDetails.tsx
+├── lib/                # Utilitários e configurações
+│   ├── api.ts          # Cliente Axios configurado
+│   └── utils.ts        # Funções utilitárias
+├── types/              # Definições de tipos TypeScript
+│   ├── products.ts
+│   ├── sales.ts
+│   ├── categories.ts
+│   ├── customers.ts
+│   └── pagination.ts
+└── App.tsx             # Componente raiz e rotas
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Funcionalidades
 
-## How can I deploy this project?
+### Dashboard
+- Visão geral de vendas, receitas e despesas
+- Gráficos de vendas (barra e linha)
+- Top produtos e categorias
+- Filtros por data, categoria e produto
+- Busca de produtos
 
-Simply open [Lovable](https://lovable.dev/projects/24aa7e13-cd97-40cd-a8f2-916af0a48e47) and click on Share -> Publish.
+### Produtos
+- Listagem com paginação
+- Criação e edição de produtos
+- Ajuste de estoque
+- Soft delete (produtos deletados não aparecem)
+- Filtros: busca, categoria, estoque baixo, faixa de preços
+- Seleção múltipla e exclusão em lote
+- Página de detalhes do produto (`/produtos/:id`)
+- Cálculo automático de lucro unitário e percentual
 
-## Can I connect a custom domain to my Lovable project?
+### Vendas
+- Criação e edição de vendas
+- Múltiplos itens por venda
+- Validação de estoque em tempo real
+- Seleção de cliente e método de pagamento
+- Data e hora da venda
+- Restauração automática de estoque ao excluir venda
+- Filtros: busca, categoria, produto, período
+- Seleção múltipla e exclusão em lote
+- Navegação para detalhes do produto a partir da venda
 
-Yes, you can!
+### Clientes
+- Cadastro completo de clientes
+- Informações de contato (email, telefone, endereço)
+- Notas adicionais
+- Busca e paginação
+- Seleção múltipla e exclusão em lote
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Categorias
+- Criação e gerenciamento de categorias
+- Descrição opcional
+- Busca e paginação
+- Ao excluir, produtos associados têm categoria removida (não deletados)
+- Seleção múltipla e exclusão em lote
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+### Despesas
+- Registro de despesas
+- Categorização
+- Data da despesa
+- Suporte a despesas recorrentes
+- Seleção múltipla e exclusão em lote
+- Busca por descrição/categoria
+
+## Recursos de UX
+
+### Formulários
+- Todos os formulários usam **React Hook Form** com validação **Zod**
+- Feedback visual de erros
+- Validação em tempo real
+- Prevenção de submissão duplicada
+
+### Paginação
+- Controles de navegação (anterior/próxima)
+- Exibição de página atual e total
+- Reset automático ao alterar filtros
+
+### Filtros
+- Filtros persistentes durante a sessão
+- Multi-select com busca para categorias e produtos
+- Filtros de data com calendário
+- Botão para limpar todos os filtros
+
+### Seleção Múltipla
+- Checkbox individual por item
+- Checkbox "selecionar todos" na página atual
+- Botão de exclusão em lote com contador
+- Modal de confirmação mostrando quantidade
+- Botão "X" para cancelar seleção
+
+### Notificações
+- Toast notifications para sucesso/erro
+- Mensagens de erro amigáveis
+- Feedback visual em operações assíncronas
+
+### Responsividade
+- Layout adaptativo (mobile-first)
+- Modais fullscreen no mobile
+- Tabelas com scroll horizontal quando necessário
+- Navegação otimizada para touch
+
+## Autenticação
+
+A aplicação usa JWT para autenticação:
+- Token armazenado no `localStorage`
+- Renovação automática de token
+- Redirecionamento para login quando não autenticado
+- Interceptor Axios para adicionar token automaticamente
+
+## Integração com API
+
+### Cliente HTTP
+O arquivo `src/lib/api.ts` configura o cliente Axios com:
+- Base URL configurável via `VITE_API_URL`
+- Interceptor para adicionar token JWT
+- Interceptor para tratamento de erros
+- Transformação automática de respostas
+
+### Hooks de Dados
+Cada módulo tem hooks customizados:
+- `useProducts()` - Listar produtos
+- `useProductsWithFilters()` - Listar com filtros/paginação
+- `useProduct(id)` - Obter produto específico
+- `useCreateProduct()` - Criar produto
+- `useUpdateProduct()` - Atualizar produto
+- `useDeleteProduct()` - Excluir produto
+- `useBulkDeleteProducts()` - Excluir múltiplos
+
+Padrão similar para: Sales, Categories, Customers, Expenses
+
+## Formatação de Dados
+
+### Moeda
+```typescript
+new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+}).format(value)
+```
+
+### Números
+```typescript
+value.toLocaleString('pt-BR', {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 3
+})
+```
+
+### Datas
+- Formatação local com `date-fns`
+- Conversão UTC para evitar problemas de timezone
+- Exibição no formato brasileiro (DD/MM/YYYY)
+
+## Desenvolvimento
+
+### Scripts Disponíveis
+
+```bash
+# Desenvolvimento
+npm run dev
+
+# Build
+npm run build
+
+# Preview do build
+npm run preview
+
+# Lint
+npm run lint
+```
+
+### Adicionar Novo Componente UI
+
+Os componentes shadcn/ui podem ser adicionados via CLI:
+
+```bash
+npx shadcn-ui@latest add [component-name]
+```
+
+### Estrutura de Tipos
+
+Todos os tipos estão centralizados em `src/types/`:
+- `pagination.ts` - Tipos de paginação
+- `products.ts` - Tipos de produtos
+- `sales.ts` - Tipos de vendas
+- `categories.ts` - Tipos de categorias
+- `customers.ts` - Tipos de clientes
+
+## Deploy
+
+### Variáveis de Ambiente
+
+```env
+VITE_API_URL=https://api.exemplo.com/api
+```
+
+### Build e Deploy
+
+1. Configure `VITE_API_URL` apontando para a API em produção
+2. Execute `npm run build`
+3. Faça deploy da pasta `dist/` para seu servidor/hosting
+
+### Plataformas Recomendadas
+
+- **Vercel** - Deploy automático via Git
+- **Netlify** - Deploy automático via Git
+- **GitHub Pages** - Hosting estático gratuito
+- **Cloudflare Pages** - CDN global
+
+## Melhores Práticas
+
+### Performance
+- React Query cacheia requisições automaticamente
+- Paginação reduz carga de dados
+- Lazy loading de rotas (quando implementado)
+
+### Acessibilidade
+- Componentes shadcn/ui seguem padrões ARIA
+- Navegação por teclado
+- Feedback visual para ações
+
+### Manutenibilidade
+- Tipos TypeScript em todos os lugares
+- Componentes reutilizáveis
+- Hooks customizados para lógica compartilhada
+- Separação clara de responsabilidades
+
+## Troubleshooting
+
+### Erro de CORS
+Certifique-se de que a API está configurada para aceitar requisições do frontend:
+```typescript
+app.enableCors({
+  origin: true,
+  credentials: true,
+});
+```
+
+### Token Expirado
+O token é renovado automaticamente. Se persistir, limpe o `localStorage` e faça login novamente.
+
+### Dados não Atualizam
+React Query pode estar usando cache. Use `invalidateQueries` após mutações:
+```typescript
+queryClient.invalidateQueries({ queryKey: ["products"] });
+```
