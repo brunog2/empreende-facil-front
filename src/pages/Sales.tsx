@@ -190,7 +190,7 @@ export default function Sales() {
               Nova Venda
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-4xl">
+          <DialogContent className="sm:max-w-4xl sm:max-h-[90vh] flex flex-col">
             <DialogHeader className="flex-shrink-0">
               <DialogTitle>
                 {editingSale ? "Editar Venda" : "Nova Venda"}
@@ -201,223 +201,229 @@ export default function Sales() {
                   : "Adicione os produtos vendidos"}
               </DialogDescription>
             </DialogHeader>
-            <div className="flex-1 min-h-0 -mx-3 sm:-mx-6 px-3 sm:px-6 sm:overflow-y-auto sm:max-h-[calc(90vh-140px)]">
+            <div className="flex-1 min-h-0 -mx-3 sm:-mx-6 px-3 sm:px-6 sm:overflow-y-auto">
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-3 sm:space-y-4"
+                id="sale-form"
               >
-              <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="space-y-2">
-                  <Label htmlFor="customer">Cliente (Opcional)</Label>
-                  <CustomerSelect
-                    value={form.watch("customerId")}
-                    onChange={(value) =>
-                      form.setValue("customerId", value || null)
-                    }
-                    error={form.formState.errors.customerId?.message}
-                  />
+                <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="customer">Cliente (Opcional)</Label>
+                    <CustomerSelect
+                      value={form.watch("customerId")}
+                      onChange={(value) =>
+                        form.setValue("customerId", value || null)
+                      }
+                      error={form.formState.errors.customerId?.message}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="payment">Forma de Pagamento *</Label>
+                    <Select
+                      value={form.watch("paymentMethod")}
+                      onValueChange={(value) =>
+                        form.setValue("paymentMethod", value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                        <SelectItem value="cartao_credito">
+                          Cartão de Crédito
+                        </SelectItem>
+                        <SelectItem value="cartao_debito">
+                          Cartão de Débito
+                        </SelectItem>
+                        <SelectItem value="pix">PIX</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {form.formState.errors.paymentMethod && (
+                      <p className="text-sm text-destructive">
+                        {form.formState.errors.paymentMethod.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="saleDate">Data da Venda *</Label>
+                    <Input
+                      id="saleDate"
+                      type="date"
+                      {...form.register("saleDate")}
+                      error={form.formState.errors.saleDate?.message}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="saleTime">Hora da Venda *</Label>
+                    <Input
+                      id="saleTime"
+                      type="time"
+                      {...form.register("saleTime")}
+                      error={form.formState.errors.saleTime?.message}
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="payment">Forma de Pagamento *</Label>
-                  <Select
-                    value={form.watch("paymentMethod")}
-                    onValueChange={(value) =>
-                      form.setValue("paymentMethod", value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                      <SelectItem value="cartao_credito">
-                        Cartão de Crédito
-                      </SelectItem>
-                      <SelectItem value="cartao_debito">
-                        Cartão de Débito
-                      </SelectItem>
-                      <SelectItem value="pix">PIX</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {form.formState.errors.paymentMethod && (
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label>Produtos *</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addSaleItem}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar Produto
+                    </Button>
+                  </div>
+
+                  {fields.length === 0 && (
                     <p className="text-sm text-destructive">
-                      {form.formState.errors.paymentMethod.message}
+                      Adicione pelo menos um produto à venda
                     </p>
                   )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="saleDate">Data da Venda *</Label>
-                  <Input
-                    id="saleDate"
-                    type="date"
-                    {...form.register("saleDate")}
-                    error={form.formState.errors.saleDate?.message}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="saleTime">Hora da Venda *</Label>
-                  <Input
-                    id="saleTime"
-                    type="time"
-                    {...form.register("saleTime")}
-                    error={form.formState.errors.saleTime?.message}
-                  />
-                </div>
-              </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label>Produtos *</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={addSaleItem}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Adicionar Produto
-                  </Button>
-                </div>
+                  {fields.map((field, index) => {
+                    const item = form.watch(`items.${index}`);
+                    const product = products.find(
+                      (p) => p.id === item?.productId
+                    );
+                    const isOutOfStock = product && product.stockQuantity <= 0;
+                    const unitPrice =
+                      form.watch(`items.${index}.unitPrice`) || 0;
 
-                {fields.length === 0 && (
-                  <p className="text-sm text-destructive">
-                    Adicione pelo menos um produto à venda
-                  </p>
-                )}
-
-                {fields.map((field, index) => {
-                  const item = form.watch(`items.${index}`);
-                  const product = products.find(
-                    (p) => p.id === item?.productId
-                  );
-                  const isOutOfStock = product && product.stockQuantity <= 0;
-                  const unitPrice = form.watch(`items.${index}.unitPrice`) || 0;
-
-                  return (
-                    <div
-                      key={field.id}
-                      className="flex flex-col sm:flex-row gap-3 sm:gap-2 items-stretch sm:items-end p-3 sm:p-4 border rounded-lg"
-                    >
-                      <div className="flex-1 w-full space-y-2">
-                        <Label>Produto</Label>
-                        <ProductSelect
-                          value={item?.productId || ""}
-                          onChange={(value) =>
-                            updateSaleItem(index, "productId", value)
-                          }
-                          error={
-                            form.formState.errors.items?.[index]?.productId
-                              ?.message
-                          }
-                        />
-                        {isOutOfStock && (
-                          <p className="text-sm text-destructive mt-1">
-                            Produto sem estoque
-                          </p>
-                        )}
-                      </div>
-                      <div className="w-full sm:w-28 space-y-2">
-                        <Label>Quantidade</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0.01"
-                          value={quantityInputs[index] ?? item?.quantity ?? ""}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            // Atualiza o estado local imediatamente (permite valores vazios)
-                            setQuantityInputs((prev) => ({
-                              ...prev,
-                              [index]: value,
-                            }));
-                            // Atualiza o form apenas se o valor for válido
-                            if (value !== "") {
-                              const numValue = parseFloat(value);
-                              if (!isNaN(numValue) && numValue > 0) {
-                                form.setValue(
-                                  `items.${index}.quantity` as any,
-                                  numValue,
-                                  { shouldValidate: true }
-                                );
-                              }
+                    return (
+                      <div
+                        key={field.id}
+                        className="flex flex-col sm:flex-row gap-3 sm:gap-2 items-stretch sm:items-end p-3 sm:p-4 border rounded-lg"
+                      >
+                        <div className="flex-1 w-full space-y-2">
+                          <Label>Produto</Label>
+                          <ProductSelect
+                            value={item?.productId || ""}
+                            onChange={(value) =>
+                              updateSaleItem(index, "productId", value)
                             }
-                          }}
-                          onBlur={(e) => {
-                            const value = e.target.value;
-                            const numValue = parseFloat(value);
-                            const finalValue =
-                              value === "" || isNaN(numValue) || numValue < 0.01
-                                ? 1
-                                : numValue;
-                            // Atualiza o form e o estado local
-                            form.setValue(
-                              `items.${index}.quantity` as any,
-                              finalValue,
-                              { shouldValidate: true }
-                            );
-                            setQuantityInputs((prev) => ({
-                              ...prev,
-                              [index]: finalValue.toString(),
-                            }));
-                          }}
-                          className={
-                            form.formState.errors.items?.[index]?.quantity
-                              ? "border-destructive"
-                              : ""
-                          }
-                        />
-                        {form.formState.errors.items?.[index]?.quantity && (
-                          <p className="text-sm text-destructive mt-1">
-                            {
-                              form.formState.errors.items[index]?.quantity
+                            error={
+                              form.formState.errors.items?.[index]?.productId
                                 ?.message
                             }
-                          </p>
-                        )}
+                          />
+                          {isOutOfStock && (
+                            <p className="text-sm text-destructive mt-1">
+                              Produto sem estoque
+                            </p>
+                          )}
+                        </div>
+                        <div className="w-full sm:w-28 space-y-2">
+                          <Label>Quantidade</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0.01"
+                            value={
+                              quantityInputs[index] ?? item?.quantity ?? ""
+                            }
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              // Atualiza o estado local imediatamente (permite valores vazios)
+                              setQuantityInputs((prev) => ({
+                                ...prev,
+                                [index]: value,
+                              }));
+                              // Atualiza o form apenas se o valor for válido
+                              if (value !== "") {
+                                const numValue = parseFloat(value);
+                                if (!isNaN(numValue) && numValue > 0) {
+                                  form.setValue(
+                                    `items.${index}.quantity` as any,
+                                    numValue,
+                                    { shouldValidate: true }
+                                  );
+                                }
+                              }
+                            }}
+                            onBlur={(e) => {
+                              const value = e.target.value;
+                              const numValue = parseFloat(value);
+                              const finalValue =
+                                value === "" ||
+                                isNaN(numValue) ||
+                                numValue < 0.01
+                                  ? 1
+                                  : numValue;
+                              // Atualiza o form e o estado local
+                              form.setValue(
+                                `items.${index}.quantity` as any,
+                                finalValue,
+                                { shouldValidate: true }
+                              );
+                              setQuantityInputs((prev) => ({
+                                ...prev,
+                                [index]: finalValue.toString(),
+                              }));
+                            }}
+                            className={
+                              form.formState.errors.items?.[index]?.quantity
+                                ? "border-destructive"
+                                : ""
+                            }
+                          />
+                          {form.formState.errors.items?.[index]?.quantity && (
+                            <p className="text-sm text-destructive mt-1">
+                              {
+                                form.formState.errors.items[index]?.quantity
+                                  ?.message
+                              }
+                            </p>
+                          )}
+                        </div>
+                        <div className="w-full sm:w-40 space-y-2">
+                          <Label>Preço Unit.</Label>
+                          <CurrencyInput
+                            value={unitPrice}
+                            onChange={(value) => {
+                              form.setValue(
+                                `items.${index}.unitPrice`,
+                                value || 0,
+                                { shouldValidate: true }
+                              );
+                            }}
+                            error={
+                              form.formState.errors.items?.[index]?.unitPrice
+                                ?.message
+                            }
+                          />
+                        </div>
+                        <div className="flex items-center justify-end sm:justify-start h-[2.5rem] sm:h-auto">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeSaleItem(index)}
+                            className="sm:mt-0"
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="w-full sm:w-40 space-y-2">
-                        <Label>Preço Unit.</Label>
-                        <CurrencyInput
-                          value={unitPrice}
-                          onChange={(value) => {
-                            form.setValue(
-                              `items.${index}.unitPrice`,
-                              value || 0,
-                              { shouldValidate: true }
-                            );
-                          }}
-                          error={
-                            form.formState.errors.items?.[index]?.unitPrice
-                              ?.message
-                          }
-                        />
-                      </div>
-                      <div className="flex items-center justify-end sm:justify-start h-[2.5rem] sm:h-auto">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeSaleItem(index)}
-                          className="sm:mt-0"
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="notes">Observações</Label>
-                <Textarea
-                  id="notes"
-                  {...form.register("notes")}
-                  rows={3}
-                  placeholder="Observações sobre a venda..."
-                  className="resize-none"
-                />
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Observações</Label>
+                  <Textarea
+                    id="notes"
+                    {...form.register("notes")}
+                    rows={3}
+                    placeholder="Observações sobre a venda..."
+                    className="resize-none"
+                  />
+                </div>
 
               <div className="flex items-center justify-between rounded-lg border p-3 sm:p-4 bg-muted/50">
                 <span className="font-semibold text-sm sm:text-base">
@@ -430,30 +436,30 @@ export default function Sales() {
                   }).format(calculateTotal())}
                 </span>
               </div>
-
-              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCloseDialog}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={createSale.isPending || updateSale.isPending}
-                >
-                  {createSale.isPending || updateSale.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {editingSale ? "Atualizando..." : "Finalizando..."}
-                    </>
-                  ) : (
-                    <>{editingSale ? "Atualizar" : "Finalizar"} Venda</>
-                  )}
-                </Button>
-              </div>
               </form>
+            </div>
+            <div className="flex-shrink-0 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-2 border-t mt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCloseDialog}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                form="sale-form"
+                disabled={createSale.isPending || updateSale.isPending}
+              >
+                {createSale.isPending || updateSale.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {editingSale ? "Atualizando..." : "Finalizando..."}
+                  </>
+                ) : (
+                  <>{editingSale ? "Atualizar" : "Finalizar"} Venda</>
+                )}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
