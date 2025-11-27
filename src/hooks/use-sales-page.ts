@@ -38,6 +38,10 @@ const saleSchema = z
   .refine((data) => data.items.length > 0, {
     message: "Adicione pelo menos um produto à venda",
     path: ["items"],
+  })
+  .refine((data) => data.items.every(item => item.productId !== ""), {
+    message: "Todos os produtos devem ser selecionados",
+    path: ["items"],
   });
 
 export type SaleFormData = z.infer<typeof saleSchema>;
