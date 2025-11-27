@@ -498,7 +498,9 @@ export default function Products() {
                         <TableCell>
                           <div>
                             <button
-                              onClick={() => navigate(`/produtos/${product.id}`)}
+                              onClick={() =>
+                                navigate(`/produtos/${product.id}`)
+                              }
                               className="font-medium hover:text-primary hover:underline text-left"
                             >
                               {product.name}

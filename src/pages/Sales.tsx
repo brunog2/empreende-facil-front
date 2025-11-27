@@ -624,9 +624,7 @@ export default function Sales() {
                                     <button
                                       type="button"
                                       onClick={() =>
-                                        navigate(
-                                          `/products?productId=${item.productId}`
-                                        )
+                                        navigate(`/produtos/${item.productId}`)
                                       }
                                       className="text-primary hover:underline font-medium"
                                     >
