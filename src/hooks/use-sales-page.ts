@@ -212,6 +212,12 @@ export function useSalesPage() {
         saleTime: getCurrentTime(),
         items: [],
       });
+      // Adicionar um item vazio ao abrir o modal para nova venda
+      append({
+        productId: "",
+        quantity: 1,
+        unitPrice: 0,
+      });
     }
     setDialogOpen(true);
   };
