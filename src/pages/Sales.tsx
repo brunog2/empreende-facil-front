@@ -190,7 +190,7 @@ export default function Sales() {
               Nova Venda
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-4xl sm:max-h-[90vh] sm:min-h-[600px] flex flex-col">
+          <DialogContent className="sm:max-w-4xl sm:max-h-[90vh] sm:min-h-[640px] flex flex-col">
             <DialogHeader className="flex-shrink-0">
               <DialogTitle>
                 {editingSale ? "Editar Venda" : "Nova Venda"}

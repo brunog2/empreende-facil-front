@@ -42,8 +42,8 @@ const DialogContent = React.forwardRef<
         "fixed z-50 flex flex-col w-full gap-4 border bg-background shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
         // Mobile: fullscreen com scroll
         "inset-0 max-h-screen p-3 sm:p-6 overflow-y-auto",
-        // Desktop: centralizado com max-width, altura automática, sem overflow fixo
-        "sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:max-w-lg sm:max-h-[90vh] sm:rounded-lg sm:overflow-visible",
+        // Desktop: centralizado com max-width, altura automática, scroll quando necessário
+        "sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:max-w-lg sm:max-h-[90vh] sm:rounded-lg sm:overflow-y-auto",
         // Animações
         "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom sm:data-[state=closed]:slide-out-to-left-1/2 sm:data-[state=closed]:slide-out-to-top-[48%] sm:data-[state=open]:slide-in-from-left-1/2 sm:data-[state=open]:slide-in-from-top-[48%]",
         className,
