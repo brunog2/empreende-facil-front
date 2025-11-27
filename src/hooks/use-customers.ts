@@ -2,34 +2,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, getErrorMessage } from "@/lib/api";
 import { useCurrentUserId } from "@/hooks/use-auth";
 import { toast } from "sonner";
-
-export interface Customer {
-  id: string;
-  userId: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
-  notes: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateCustomerDto {
-  name: string;
-  email?: string | null;
-  phone?: string | null;
-  address?: string | null;
-  notes?: string | null;
-}
-
-export interface UpdateCustomerDto {
-  name?: string;
-  email?: string | null;
-  phone?: string | null;
-  address?: string | null;
-  notes?: string | null;
-}
+import type {
+  Customer,
+  CreateCustomerDto,
+  UpdateCustomerDto,
+  CustomerFilters,
+  CustomersResponse,
+} from "@/types/customers";
+import type { PaginatedResponse } from "@/types/pagination";
 
 export function useCustomers() {
   const { data: userId } = useCurrentUserId();
@@ -38,7 +18,32 @@ export function useCustomers() {
     queryKey: ["customers", userId],
     queryFn: async () => {
       if (!userId) throw new Error("Usuário não autenticado");
-      const response = await api.get<{ data: Customer[] }>("/customers");
+      const response = await api.get<{ data: CustomersResponse }>("/customers");
+      const data = response.data.data;
+      // Se for objeto paginado (tem propriedade 'data' e 'meta'), extrair o array
+      if (data && typeof data === 'object' && !Array.isArray(data) && 'data' in data && 'meta' in data) {
+        return (data as PaginatedResponse<Customer>).data;
+      }
+      // Caso contrário, retornar como array
+      return Array.isArray(data) ? data : [];
+    },
+    enabled: !!userId,
+  });
+}
+
+export function useCustomersWithFilters(filters: CustomerFilters) {
+  const { data: userId } = useCurrentUserId();
+  
+  return useQuery({
+    queryKey: ["customers", "filtered", filters, userId],
+    queryFn: async () => {
+      if (!userId) throw new Error("Usuário não autenticado");
+      const params = new URLSearchParams();
+      if (filters.page) params.append("page", filters.page.toString());
+      if (filters.limit) params.append("limit", filters.limit.toString());
+      if (filters.search) params.append("search", filters.search);
+      
+      const response = await api.get<{ data: PaginatedResponse<Customer> }>(`/customers?${params.toString()}`);
       return response.data.data;
     },
     enabled: !!userId,
@@ -112,6 +117,25 @@ export function useDeleteCustomer() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["customers"] });
       toast.success("Cliente excluído com sucesso!");
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useBulkDeleteCustomers() {
+  const queryClient = useQueryClient();
+  const { data: userId } = useCurrentUserId();
+
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (!userId) throw new Error("Usuário não autenticado");
+      await api.delete("/customers/bulk", { data: { ids } });
+    },
+    onSuccess: (_, ids) => {
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      toast.success(`${ids.length} cliente(s) excluído(s) com sucesso!`);
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error));

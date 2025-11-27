@@ -5,12 +5,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
   useProducts,
+  useProductsWithFilters,
+  useProduct,
   useCreateProduct,
   useUpdateProduct,
   useDeleteProduct,
-  type Product,
+  useBulkDeleteProducts,
 } from "@/hooks/use-products";
 import { useCategories } from "@/hooks/use-categories";
+import type { Product, ProductFilters } from "@/types/products";
 
 const productSchema = z.object({
   name: z.string().min(1, "O nome do produto é obrigatório"),
@@ -37,41 +40,120 @@ const stockAdjustmentSchema = z.object({
 
 export type StockAdjustmentFormData = z.infer<typeof stockAdjustmentSchema>;
 
+const productFiltersSchema = z.object({
+  searchTerm: z.string().default(""),
+  lowStockFilter: z.boolean().nullable().default(null),
+  categoryFilter: z.array(z.string()).default([]),
+  minSalePrice: z.coerce.number().nullable().default(null),
+  maxSalePrice: z.coerce.number().nullable().default(null),
+  minCostPrice: z.coerce.number().nullable().default(null),
+  maxCostPrice: z.coerce.number().nullable().default(null),
+});
+
+export type ProductFiltersFormData = z.infer<typeof productFiltersSchema>;
+
 export function useProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [stockDialogOpen, setStockDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [productForStock, setProductForStock] = useState<string | null>(null);
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(
+    new Set()
+  );
 
-  // Filtros
-  const [lowStockFilter, setLowStockFilter] = useState<boolean | null>(null);
-  const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
-  const [minSalePrice, setMinSalePrice] = useState<number | null>(null);
-  const [maxSalePrice, setMaxSalePrice] = useState<number | null>(null);
-  const [minCostPrice, setMinCostPrice] = useState<number | null>(null);
-  const [maxCostPrice, setMaxCostPrice] = useState<number | null>(null);
+  // Filtros com React Hook Form
   const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
 
-  const { data: products = [], isLoading } = useProducts();
+  const filtersForm = useForm<ProductFiltersFormData>({
+    resolver: zodResolver(productFiltersSchema),
+    defaultValues: {
+      searchTerm: "",
+      lowStockFilter: null,
+      categoryFilter: [],
+      minSalePrice: null,
+      maxSalePrice: null,
+      minCostPrice: null,
+      maxCostPrice: null,
+    },
+  });
+
+  // Watch dos valores do form de filtros
+  const searchTerm = filtersForm.watch("searchTerm");
+  const lowStockFilter = filtersForm.watch("lowStockFilter");
+  const categoryFilter = filtersForm.watch("categoryFilter");
+  const minSalePrice = filtersForm.watch("minSalePrice");
+  const maxSalePrice = filtersForm.watch("maxSalePrice");
+  const minCostPrice = filtersForm.watch("minCostPrice");
+  const maxCostPrice = filtersForm.watch("maxCostPrice");
+
+  // Determinar se há filtros ativos (além de paginação)
+  const hasActiveFilters =
+    searchTerm ||
+    lowStockFilter !== null ||
+    categoryFilter.length > 0 ||
+    minSalePrice !== null ||
+    maxSalePrice !== null ||
+    minCostPrice !== null ||
+    maxCostPrice !== null;
+
+  // Sempre usar paginação do backend
+  const backendFilters: ProductFilters = {
+    page: currentPage,
+    limit: pageSize,
+    ...(searchTerm && { search: searchTerm }),
+    ...(categoryFilter.length > 0 && { categories: categoryFilter }),
+    ...(lowStockFilter !== null && { lowStock: lowStockFilter }),
+    ...(minSalePrice !== null && { minSalePrice }),
+    ...(maxSalePrice !== null && { maxSalePrice }),
+    ...(minCostPrice !== null && { minCostPrice }),
+    ...(maxCostPrice !== null && { maxCostPrice }),
+  };
+
+  // Sempre usar hook com filtros (que inclui paginação)
+  const { data: paginatedData, isLoading } =
+    useProductsWithFilters(backendFilters);
+
+  const products = paginatedData?.data || [];
+  const paginationMeta = paginatedData?.meta || null;
   const { data: categories = [] } = useCategories();
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
+  const bulkDeleteProducts = useBulkDeleteProducts();
 
   // Aplicar filtro de estoque baixo se vier da dashboard
   useEffect(() => {
     if (searchParams.get("estoqueBaixo") === "true") {
-      setLowStockFilter(true);
+      filtersForm.setValue("lowStockFilter", true);
       setShowFilters(true);
       setSearchParams({}, { replace: true });
     }
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, filtersForm]);
 
+  // Resetar página quando filtros mudarem
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    searchTerm,
+    lowStockFilter,
+    categoryFilter,
+    minSalePrice,
+    maxSalePrice,
+    minCostPrice,
+    maxCostPrice,
+  ]);
+
+  // Buscar produto individual quando estiver editando (pode não estar na página atual)
+  const { data: individualEditingProduct } = useProduct(editingProductId);
   const editingProduct = editingProductId
-    ? products.find((p) => p.id === editingProductId)
+    ? products.find((p) => p.id === editingProductId) ||
+      individualEditingProduct
     : null;
 
   const form = useForm<ProductFormData>({
@@ -95,18 +177,8 @@ export function useProductsPage() {
 
   const handleOpenDialog = (productId?: string) => {
     if (productId) {
-      const product = products.find((p) => p.id === productId);
-      if (product) {
-        setEditingProductId(productId);
-        form.reset({
-          name: product.name,
-          description: product.description || "",
-          category: product.category,
-          costPrice: product.costPrice,
-          salePrice: product.salePrice,
-          stockQuantity: product.stockQuantity,
-        });
-      }
+      setEditingProductId(productId);
+      // O editingProduct será atualizado via useProduct hook e useEffect abaixo
     } else {
       setEditingProductId(null);
       form.reset({
@@ -120,6 +192,20 @@ export function useProductsPage() {
     }
     setDialogOpen(true);
   };
+
+  // Preencher formulário quando editingProduct estiver disponível
+  useEffect(() => {
+    if (editingProduct && editingProductId && dialogOpen) {
+      form.reset({
+        name: editingProduct.name,
+        description: editingProduct.description || "",
+        category: editingProduct.category,
+        costPrice: editingProduct.costPrice,
+        salePrice: editingProduct.salePrice,
+        stockQuantity: editingProduct.stockQuantity,
+      });
+    }
+  }, [editingProduct, editingProductId, dialogOpen, form]);
 
   const handleCloseDialog = () => {
     setDialogOpen(false);
@@ -214,79 +300,75 @@ export function useProductsPage() {
     }
   };
 
-  // Filtrar produtos
-  const filteredProducts = products.filter((product) => {
-    if (
-      lowStockFilter !== null &&
-      product.stockQuantity <= 0 !== lowStockFilter
-    ) {
-      return false;
-    }
-    if (categoryFilter.length > 0) {
-      // Buscar o nome da categoria do produto
-      const productCategoryName = product.category
-        ? categories.find(
-            (cat) =>
-              cat.id === product.category || cat.name === product.category
-          )?.name || product.category
-        : null;
-
-      // Verificar se o produto passa no filtro
-      const hasSemCategoria = categoryFilter.includes("sem_categoria");
-      const hasCategoryMatch = categoryFilter.some((filterCat) => {
-        if (filterCat === "sem_categoria") return false;
-        return productCategoryName === filterCat;
-      });
-
-      // Produto passa se:
-      // - Não tem categoria E "sem_categoria" está selecionado
-      // - Tem categoria E está na lista de categorias selecionadas
-      if (!productCategoryName && !hasSemCategoria) {
-        return false; // Produto sem categoria mas filtro não inclui "sem_categoria"
-      }
-      if (productCategoryName && !hasCategoryMatch) {
-        return false; // Produto tem categoria mas não está nas selecionadas
-      }
-    }
-    if (minSalePrice !== null && product.salePrice < minSalePrice) {
-      return false;
-    }
-    if (maxSalePrice !== null && product.salePrice > maxSalePrice) {
-      return false;
-    }
-    if (minCostPrice !== null && product.costPrice < minCostPrice) {
-      return false;
-    }
-    if (maxCostPrice !== null && product.costPrice > maxCostPrice) {
-      return false;
-    }
-    return true;
-  });
-
-  const hasActiveFilters =
-    lowStockFilter !== null ||
-    categoryFilter.length > 0 ||
-    minSalePrice !== null ||
-    maxSalePrice !== null ||
-    minCostPrice !== null ||
-    maxCostPrice !== null;
-
   const clearFilters = () => {
-    setLowStockFilter(null);
-    setCategoryFilter([]);
-    setMinSalePrice(null);
-    setMaxSalePrice(null);
-    setMinCostPrice(null);
-    setMaxCostPrice(null);
+    filtersForm.reset({
+      searchTerm: "",
+      lowStockFilter: null,
+      categoryFilter: [],
+      minSalePrice: null,
+      maxSalePrice: null,
+      minCostPrice: null,
+      maxCostPrice: null,
+    });
+    setCurrentPage(1);
+  };
+
+  // Selection logic
+  const toggleSelect = (productId: string) => {
+    setSelectedProducts((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(productId)) {
+        newSet.delete(productId);
+      } else {
+        newSet.add(productId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedProducts.size === products.length && products.length > 0) {
+      setSelectedProducts(new Set());
+    } else {
+      setSelectedProducts(new Set(products.map((p) => p.id)));
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedProducts(new Set());
+  };
+
+  const handleBulkDeleteClick = () => {
+    if (selectedProducts.size > 0) {
+      setBulkDeleteDialogOpen(true);
+    }
+  };
+
+  const handleConfirmBulkDelete = async () => {
+    if (selectedProducts.size > 0) {
+      try {
+        await bulkDeleteProducts.mutateAsync(Array.from(selectedProducts));
+        setBulkDeleteDialogOpen(false);
+        clearSelection();
+      } catch (error) {
+        // Erro já é tratado pelo hook
+      }
+    }
   };
 
   return {
     // Data
-    products: filteredProducts,
-    allProducts: products,
+    products,
+    allProducts: products, // Para compatibilidade, mas agora sempre paginado
     categories,
     editingProduct,
     isLoading,
+    paginationMeta,
+
+    // Pagination
+    currentPage,
+    setCurrentPage,
+    pageSize,
 
     // Form
     form,
@@ -314,19 +396,19 @@ export function useProductsPage() {
     handleConfirmDelete,
     deleteProduct,
 
+    // Bulk Delete
+    selectedProducts,
+    bulkDeleteDialogOpen,
+    setBulkDeleteDialogOpen,
+    toggleSelect,
+    toggleSelectAll,
+    clearSelection,
+    handleBulkDeleteClick,
+    handleConfirmBulkDelete,
+    bulkDeleteProducts,
+
     // Filters
-    lowStockFilter,
-    setLowStockFilter,
-    categoryFilter,
-    setCategoryFilter,
-    minSalePrice,
-    setMinSalePrice,
-    maxSalePrice,
-    setMaxSalePrice,
-    minCostPrice,
-    setMinCostPrice,
-    maxCostPrice,
-    setMaxCostPrice,
+    filtersForm,
     showFilters,
     setShowFilters,
     hasActiveFilters,

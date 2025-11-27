@@ -7,6 +7,7 @@ import {
   useCreateExpense,
   useUpdateExpense,
   useDeleteExpense,
+  useBulkDeleteExpenses,
   useExpensesByCategory,
 } from "@/hooks/use-expenses";
 
@@ -47,10 +48,12 @@ const recurrenceOptions = [
 export function useExpensesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState<string | null>(null);
   const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [recurringFilter, setRecurringFilter] = useState<boolean | null>(null);
+  const [selectedExpenses, setSelectedExpenses] = useState<Set<string>>(new Set());
 
   const { data: allExpenses = [], isLoading } = useExpenses();
   const { data: filteredExpensesByCategory = [] } = useExpensesByCategory(
@@ -59,6 +62,7 @@ export function useExpensesPage() {
   const createExpense = useCreateExpense();
   const updateExpense = useUpdateExpense();
   const deleteExpense = useDeleteExpense();
+  const bulkDeleteExpenses = useBulkDeleteExpenses();
 
   const editingExpense = editingExpenseId
     ? allExpenses.find((e) => e.id === editingExpenseId)
@@ -171,6 +175,49 @@ export function useExpensesPage() {
     }
   };
 
+  // Selection logic
+  const toggleSelect = (expenseId: string) => {
+    setSelectedExpenses((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(expenseId)) {
+        newSet.delete(expenseId);
+      } else {
+        newSet.add(expenseId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedExpenses.size === expenses.length && expenses.length > 0) {
+      setSelectedExpenses(new Set());
+    } else {
+      setSelectedExpenses(new Set(expenses.map((e) => e.id)));
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedExpenses(new Set());
+  };
+
+  const handleBulkDeleteClick = () => {
+    if (selectedExpenses.size > 0) {
+      setBulkDeleteDialogOpen(true);
+    }
+  };
+
+  const handleConfirmBulkDelete = async () => {
+    if (selectedExpenses.size > 0) {
+      try {
+        await bulkDeleteExpenses.mutateAsync(Array.from(selectedExpenses));
+        setBulkDeleteDialogOpen(false);
+        clearSelection();
+      } catch (error) {
+        // Erro já é tratado pelo hook
+      }
+    }
+  };
+
   const totalExpenses = expenses.reduce(
     (sum, expense) => sum + Number(expense.amount),
     0
@@ -201,6 +248,17 @@ export function useExpensesPage() {
     handleDeleteClick,
     handleConfirmDelete,
     deleteExpense,
+
+    // Bulk Delete
+    selectedExpenses,
+    bulkDeleteDialogOpen,
+    setBulkDeleteDialogOpen,
+    toggleSelect,
+    toggleSelectAll,
+    clearSelection,
+    handleBulkDeleteClick,
+    handleConfirmBulkDelete,
+    bulkDeleteExpenses,
     
     // Filters
     categoryFilter,

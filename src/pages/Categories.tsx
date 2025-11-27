@@ -1,10 +1,3 @@
-import { useState } from "react";
-import {
-  useCategories,
-  useCreateCategory,
-  useUpdateCategory,
-  useDeleteCategory,
-} from "@/hooks/use-categories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,111 +35,48 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Filter, X } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { CategoriesShimmer } from "@/components/shimmer/CategoriesShimmer";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-
-const categorySchema = z.object({
-  name: z
-    .string()
-    .min(1, "O nome da categoria é obrigatório")
-    .max(100, "O nome não pode ter mais de 100 caracteres"),
-  description: z.string().optional(),
-});
-
-type CategoryFormData = z.infer<typeof categorySchema>;
+import { useCategoriesPage } from "@/hooks/use-categories-page";
 
 export default function Categories() {
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
-  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
-    null
-  );
-
-  const { data: categories = [], isLoading } = useCategories();
-  const createCategory = useCreateCategory();
-  const updateCategory = useUpdateCategory();
-  const deleteCategory = useDeleteCategory();
-
-  const editingCategory = editingCategoryId
-    ? categories.find((c) => c.id === editingCategoryId)
-    : null;
-
-  const form = useForm<CategoryFormData>({
-    resolver: zodResolver(categorySchema),
-    defaultValues: {
-      name: "",
-      description: "",
-    },
-  });
-
-  const handleOpenDialog = (categoryId?: string) => {
-    if (categoryId) {
-      const category = categories.find((c) => c.id === categoryId);
-      if (category) {
-        setEditingCategoryId(categoryId);
-        form.reset({
-          name: category.name,
-          description: category.description || "",
-        });
-      }
-    } else {
-      setEditingCategoryId(null);
-      form.reset({
-        name: "",
-        description: "",
-      });
-    }
-    setDialogOpen(true);
-  };
-
-  const handleCloseDialog = () => {
-    setDialogOpen(false);
-    setEditingCategoryId(null);
-    form.reset();
-  };
-
-  const onSubmit = async (data: CategoryFormData) => {
-    try {
-      if (editingCategoryId) {
-        await updateCategory.mutateAsync({
-          id: editingCategoryId,
-          data: {
-            name: data.name,
-            description: data.description || null,
-          },
-        });
-      } else {
-        await createCategory.mutateAsync({
-          name: data.name,
-          description: data.description || null,
-        });
-      }
-      handleCloseDialog();
-    } catch (error) {
-      // Erro já é tratado pelo hook
-    }
-  };
-
-  const handleDeleteClick = (id: string) => {
-    setCategoryToDelete(id);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (categoryToDelete) {
-      try {
-        await deleteCategory.mutateAsync(categoryToDelete);
-        setDeleteDialogOpen(false);
-        setCategoryToDelete(null);
-      } catch (error) {
-        // Erro já é tratado pelo hook
-      }
-    }
-  };
+  const {
+    categories,
+    editingCategory,
+    isLoading,
+    paginationMeta,
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    form,
+    onSubmit,
+    dialogOpen,
+    setDialogOpen,
+    deleteDialogOpen,
+    setDeleteDialogOpen,
+    handleOpenDialog,
+    handleCloseDialog,
+    handleDeleteClick,
+    handleConfirmDelete,
+    deleteCategory,
+    selectedCategories,
+    bulkDeleteDialogOpen,
+    setBulkDeleteDialogOpen,
+    toggleSelect,
+    toggleSelectAll,
+    clearSelection,
+    handleBulkDeleteClick,
+    handleConfirmBulkDelete,
+    bulkDeleteCategories,
+    filtersForm,
+    showFilters,
+    setShowFilters,
+    hasActiveFilters,
+    clearFilters,
+    createCategory,
+    updateCategory,
+  } = useCategoriesPage();
 
   if (isLoading) {
     return <CategoriesShimmer />;
@@ -171,7 +101,7 @@ export default function Categories() {
               Nova Categoria
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>
                 {editingCategory ? "Editar Categoria" : "Nova Categoria"}
@@ -182,7 +112,10 @@ export default function Categories() {
                   : "Crie uma nova categoria para seus produtos"}
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-3 sm:space-y-4"
+            >
               <div className="space-y-2">
                 <Label htmlFor="name">Nome da Categoria *</Label>
                 <Input
@@ -199,9 +132,10 @@ export default function Categories() {
                   rows={3}
                   placeholder="Descreva a categoria..."
                   error={form.formState.errors.description?.message}
+                  className="resize-none"
                 />
               </div>
-              <div className="flex justify-end gap-3">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-2">
                 <Button
                   type="button"
                   variant="outline"
@@ -228,14 +162,82 @@ export default function Categories() {
             </form>
           </DialogContent>
         </Dialog>
+        <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
+          <Filter className="mr-2 h-4 w-4" />
+          Filtros
+          {hasActiveFilters && (
+            <span className="ml-2 bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs">
+              1
+            </span>
+          )}
+        </Button>
       </div>
+
+      {showFilters && (
+        <Card className="mb-4">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Filter className="h-5 w-5" />
+                Filtros
+              </CardTitle>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  <X className="mr-2 h-4 w-4" />
+                  Limpar Filtros
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="search">Buscar</Label>
+                <Input
+                  id="search"
+                  placeholder="Nome ou descrição..."
+                  {...filtersForm.register("searchTerm")}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
-          <CardTitle>Lista de Categorias</CardTitle>
-          <CardDescription>
-            {categories.length} categoria(s) cadastrada(s)
-          </CardDescription>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <CardTitle>Lista de Categorias</CardTitle>
+              <CardDescription>
+                {paginationMeta
+                  ? `${paginationMeta.total} categoria(s) encontrada(s) - Página ${paginationMeta.page} de ${paginationMeta.totalPages}`
+                  : `${categories.length} categoria(s) cadastrada(s)`}
+                {hasActiveFilters && " (filtros aplicados)"}
+              </CardDescription>
+            </div>
+            {selectedCategories.size > 0 && (
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  variant="destructive"
+                  onClick={handleBulkDeleteClick}
+                  disabled={bulkDeleteCategories.isPending}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Excluir {selectedCategories.size} selecionada(s)
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={clearSelection}
+                  className="h-9 w-9"
+                  title="Cancelar seleção"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="p-0 sm:p-6 sm:pt-0">
           {categories.length === 0 ? (
@@ -247,6 +249,15 @@ export default function Categories() {
               <Table className="min-w-[600px] w-full">
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={
+                          categories.length > 0 &&
+                          selectedCategories.size === categories.length
+                        }
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </TableHead>
                     <TableHead>Nome</TableHead>
                     <TableHead>Descrição</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
@@ -255,6 +266,12 @@ export default function Categories() {
                 <TableBody>
                   {categories.map((category) => (
                     <TableRow key={category.id}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedCategories.has(category.id)}
+                          onCheckedChange={() => toggleSelect(category.id)}
+                        />
+                      </TableCell>
                       <TableCell className="font-medium">
                         {category.name}
                       </TableCell>
@@ -291,6 +308,42 @@ export default function Categories() {
               </Table>
             </div>
           )}
+          {paginationMeta && paginationMeta.totalPages > 1 && (
+            <div className="flex items-center justify-between px-6 py-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                Mostrando {(currentPage - 1) * pageSize + 1} a{" "}
+                {Math.min(currentPage * pageSize, paginationMeta.total)} de{" "}
+                {paginationMeta.total} categorias
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  disabled={currentPage === 1}
+                >
+                  Anterior
+                </Button>
+                <div className="text-sm">
+                  Página {currentPage} de {paginationMeta.totalPages}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage((prev) =>
+                      Math.min(paginationMeta.totalPages, prev + 1)
+                    )
+                  }
+                  disabled={currentPage === paginationMeta.totalPages}
+                >
+                  Próxima
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -311,6 +364,38 @@ export default function Categories() {
               disabled={deleteCategory.isPending}
             >
               {deleteCategory.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Excluindo...
+                </>
+              ) : (
+                "Excluir"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir {selectedCategories.size}{" "}
+              categoria(s)? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmBulkDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={bulkDeleteCategories.isPending}
+            >
+              {bulkDeleteCategories.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Excluindo...

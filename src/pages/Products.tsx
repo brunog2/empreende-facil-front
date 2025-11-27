@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
   CardContent,
@@ -60,20 +61,29 @@ import { CurrencyInput } from "@/components/ui/currency-input";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { MultiSelectSearchable } from "@/components/ui/multi-select-searchable";
 import { useProductsPage } from "@/hooks/use-products-page";
+import { useSearchParams } from "react-router-dom";
+import { useEffect } from "react";
 
 export default function Products() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     products,
     allProducts,
     categories,
     editingProduct,
     isLoading,
+    paginationMeta,
+    currentPage,
+    setCurrentPage,
+    pageSize,
     form,
     onSubmit,
     dialogOpen,
     setDialogOpen,
     deleteDialogOpen,
     setDeleteDialogOpen,
+    bulkDeleteDialogOpen,
+    setBulkDeleteDialogOpen,
     stockDialogOpen,
     setStockDialogOpen,
     handleOpenDialog,
@@ -86,18 +96,14 @@ export default function Products() {
     handleDeleteClick,
     handleConfirmDelete,
     deleteProduct,
-    lowStockFilter,
-    setLowStockFilter,
-    categoryFilter,
-    setCategoryFilter,
-    minSalePrice,
-    setMinSalePrice,
-    maxSalePrice,
-    setMaxSalePrice,
-    minCostPrice,
-    setMinCostPrice,
-    maxCostPrice,
-    setMaxCostPrice,
+    selectedProducts,
+    toggleSelect,
+    toggleSelectAll,
+    clearSelection,
+    handleBulkDeleteClick,
+    handleConfirmBulkDelete,
+    bulkDeleteProducts,
+    filtersForm,
     showFilters,
     setShowFilters,
     hasActiveFilters,
@@ -105,6 +111,28 @@ export default function Products() {
     createProduct,
     updateProduct,
   } = useProductsPage();
+
+  // Abrir modal de edição se productId estiver na URL
+  useEffect(() => {
+    const productId = searchParams.get("productId");
+    if (productId && !dialogOpen && !isLoading) {
+      // Verificar se o produto está na página atual
+      const product = products.find((p) => p.id === productId);
+      if (product) {
+        handleOpenDialog(productId);
+        // Remover productId da URL após abrir
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete("productId");
+        setSearchParams(newParams, { replace: true });
+      } else {
+        // Se não estiver na página atual, apenas remover o param
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete("productId");
+        setSearchParams(newParams, { replace: true });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, products, dialogOpen, isLoading]);
 
   if (isLoading) {
     return <ProductsShimmer />;
@@ -131,7 +159,7 @@ export default function Products() {
                 Novo Produto
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-2xl">
               <DialogHeader>
                 <DialogTitle>
                   {editingProduct ? "Editar Produto" : "Novo Produto"}
@@ -142,9 +170,9 @@ export default function Products() {
               </DialogHeader>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
+                className="space-y-3 sm:space-y-4"
               >
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="name">Nome do Produto *</Label>
                     <Input
@@ -170,9 +198,10 @@ export default function Products() {
                     rows={3}
                     placeholder="Descreva o produto..."
                     error={form.formState.errors.description?.message}
+                    className="resize-none"
                   />
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="cost_price">Preço de Custo *</Label>
                     <CurrencyInput
@@ -213,7 +242,7 @@ export default function Products() {
                     error={form.formState.errors.stockQuantity?.message}
                   />
                 </div>
-                <div className="flex justify-end gap-3">
+                <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-2">
                   <Button
                     type="button"
                     variant="outline"
@@ -249,16 +278,7 @@ export default function Products() {
             Filtros
             {hasActiveFilters && (
               <Badge variant="secondary" className="ml-2">
-                {
-                  [
-                    lowStockFilter !== null,
-                    categoryFilter,
-                    minSalePrice !== null,
-                    maxSalePrice !== null,
-                    minCostPrice !== null,
-                    maxCostPrice !== null,
-                  ].filter(Boolean).length
-                }
+                {hasActiveFilters ? 1 : 0}
               </Badge>
             )}
           </Button>
@@ -284,17 +304,28 @@ export default function Products() {
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <div className="space-y-2">
+                <Label htmlFor="search">Buscar</Label>
+                <Input
+                  id="search"
+                  placeholder="Nome, descrição ou categoria..."
+                  {...filtersForm.register("searchTerm")}
+                />
+              </div>
+              <div className="space-y-2">
                 <Label>Estoque Baixo</Label>
                 <Select
                   value={
-                    lowStockFilter === null
+                    filtersForm.watch("lowStockFilter") === null
                       ? "all"
-                      : lowStockFilter
+                      : filtersForm.watch("lowStockFilter")
                       ? "yes"
                       : "no"
                   }
                   onValueChange={(value) => {
-                    setLowStockFilter(value === "all" ? null : value === "yes");
+                    filtersForm.setValue(
+                      "lowStockFilter",
+                      value === "all" ? null : value === "yes"
+                    );
                   }}
                 >
                   <SelectTrigger>
@@ -312,8 +343,10 @@ export default function Products() {
               <div className="space-y-2">
                 <Label>Categoria</Label>
                 <MultiSelectSearchable
-                  value={categoryFilter}
-                  onChange={(value) => setCategoryFilter(value)}
+                  value={filtersForm.watch("categoryFilter")}
+                  onChange={(value) =>
+                    filtersForm.setValue("categoryFilter", value)
+                  }
                   options={[
                     { value: "sem_categoria", label: "Sem categoria" },
                     ...categories.map((cat) => ({
@@ -329,29 +362,37 @@ export default function Products() {
               <div className="space-y-2">
                 <Label>Preço de Venda Mínimo</Label>
                 <CurrencyInput
-                  value={minSalePrice || 0}
-                  onChange={(value) => setMinSalePrice(value || null)}
+                  value={filtersForm.watch("minSalePrice") || 0}
+                  onChange={(value) =>
+                    filtersForm.setValue("minSalePrice", value || null)
+                  }
                 />
               </div>
               <div className="space-y-2">
                 <Label>Preço de Venda Máximo</Label>
                 <CurrencyInput
-                  value={maxSalePrice || 0}
-                  onChange={(value) => setMaxSalePrice(value || null)}
+                  value={filtersForm.watch("maxSalePrice") || 0}
+                  onChange={(value) =>
+                    filtersForm.setValue("maxSalePrice", value || null)
+                  }
                 />
               </div>
               <div className="space-y-2">
                 <Label>Preço de Custo Mínimo</Label>
                 <CurrencyInput
-                  value={minCostPrice || 0}
-                  onChange={(value) => setMinCostPrice(value || null)}
+                  value={filtersForm.watch("minCostPrice") || 0}
+                  onChange={(value) =>
+                    filtersForm.setValue("minCostPrice", value || null)
+                  }
                 />
               </div>
               <div className="space-y-2">
                 <Label>Preço de Custo Máximo</Label>
                 <CurrencyInput
-                  value={maxCostPrice || 0}
-                  onChange={(value) => setMaxCostPrice(value || null)}
+                  value={filtersForm.watch("maxCostPrice") || 0}
+                  onChange={(value) =>
+                    filtersForm.setValue("maxCostPrice", value || null)
+                  }
                 />
               </div>
             </div>
@@ -361,11 +402,38 @@ export default function Products() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Lista de Produtos</CardTitle>
-          <CardDescription>
-            {products.length} de {allProducts.length} produto(s) cadastrado(s)
-            {hasActiveFilters && " (filtros aplicados)"}
-          </CardDescription>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <CardTitle>Lista de Produtos</CardTitle>
+              <CardDescription>
+                {paginationMeta
+                  ? `${paginationMeta.total} produto(s) encontrado(s) - Página ${paginationMeta.page} de ${paginationMeta.totalPages}`
+                  : `${products.length} produto(s) cadastrado(s)`}
+                {hasActiveFilters && " (filtros aplicados)"}
+              </CardDescription>
+            </div>
+            {selectedProducts.size > 0 && (
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  variant="destructive"
+                  onClick={handleBulkDeleteClick}
+                  disabled={bulkDeleteProducts.isPending}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Excluir {selectedProducts.size} selecionado(s)
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={clearSelection}
+                  className="h-9 w-9"
+                  title="Cancelar seleção"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="p-0 sm:p-6 sm:pt-0">
           {products.length === 0 ? (
@@ -379,6 +447,15 @@ export default function Products() {
               <Table className="min-w-[600px] w-full">
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={
+                          products.length > 0 &&
+                          selectedProducts.size === products.length
+                        }
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </TableHead>
                     <TableHead>Produto</TableHead>
                     <TableHead>Categoria</TableHead>
                     <TableHead>Preço Custo</TableHead>
@@ -411,6 +488,12 @@ export default function Products() {
                         : "0";
                     return (
                       <TableRow key={product.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedProducts.has(product.id)}
+                            onCheckedChange={() => toggleSelect(product.id)}
+                          />
+                        </TableCell>
                         <TableCell>
                           <div>
                             <div className="font-medium">{product.name}</div>
@@ -514,6 +597,42 @@ export default function Products() {
               </Table>
             </div>
           )}
+          {paginationMeta && paginationMeta.totalPages > 1 && (
+            <div className="flex items-center justify-between px-6 py-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                Mostrando {(currentPage - 1) * pageSize + 1} a{" "}
+                {Math.min(currentPage * pageSize, paginationMeta.total)} de{" "}
+                {paginationMeta.total} produtos
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  disabled={currentPage === 1}
+                >
+                  Anterior
+                </Button>
+                <div className="text-sm">
+                  Página {currentPage} de {paginationMeta.totalPages}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage((prev) =>
+                      Math.min(paginationMeta.totalPages, prev + 1)
+                    )
+                  }
+                  disabled={currentPage === paginationMeta.totalPages}
+                >
+                  Próxima
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -534,6 +653,38 @@ export default function Products() {
               disabled={deleteProduct.isPending}
             >
               {deleteProduct.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Excluindo...
+                </>
+              ) : (
+                "Excluir"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir {selectedProducts.size} produto(s)?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmBulkDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={bulkDeleteProducts.isPending}
+            >
+              {bulkDeleteProducts.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Excluindo...
@@ -567,7 +718,7 @@ export default function Products() {
                   onSubmit={stockForm.handleSubmit(
                     handleConfirmStockAdjustment
                   )}
-                  className="space-y-4"
+                  className="space-y-3 sm:space-y-4"
                 >
                   <div>
                     <p className="text-sm font-medium mb-2">
@@ -627,7 +778,6 @@ export default function Products() {
                           e.stopPropagation();
                           const currentValue = currentStock || 0;
                           const newValue = Number(currentValue) + 1;
-                          console.log(newValue);
                           stockForm.setValue("stockQuantity", newValue, {
                             shouldValidate: true,
                           });
@@ -658,7 +808,7 @@ export default function Products() {
                       </strong>
                     </p>
                   </div>
-                  <div className="flex justify-end gap-3">
+                  <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-2">
                     <Button
                       type="button"
                       variant="outline"

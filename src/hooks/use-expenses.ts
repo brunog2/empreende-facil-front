@@ -125,6 +125,26 @@ export function useDeleteExpense() {
   });
 }
 
+export function useBulkDeleteExpenses() {
+  const queryClient = useQueryClient();
+  const { data: userId } = useCurrentUserId();
+
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (!userId) throw new Error("Usuário não autenticado");
+      await api.delete("/expenses/bulk", { data: { ids } });
+    },
+    onSuccess: (_, ids) => {
+      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success(`${ids.length} despesa(s) excluída(s) com sucesso!`);
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
 export function useMonthlyExpensesTotal(year: number, month: number) {
   const { data: userId } = useCurrentUserId();
   

@@ -43,7 +43,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Pencil, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Plus, Trash2, Pencil, Loader2, Filter, X } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { SalesShimmer } from "@/components/shimmer/SalesShimmer";
 import { format } from "date-fns";
 import { CustomerSelect } from "@/components/CustomerSelect";
@@ -51,12 +53,53 @@ import { ProductSelect } from "@/components/ProductSelect";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { useSalesPage } from "@/hooks/use-sales-page";
 
+// Helper para extrair apenas a data (YYYY-MM-DD) de uma string ISO, ignorando timezone
+const extractDateOnly = (isoString: string): string => {
+  // Se a string já está no formato YYYY-MM-DD, retorna direto
+  if (isoString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    return isoString;
+  }
+  // Extrai apenas a parte da data (YYYY-MM-DD) da string ISO
+  return isoString.split("T")[0];
+};
+
+// Helper para formatar data de venda corretamente, ignorando problemas de timezone
+const formatSaleDate = (
+  isoString: string,
+  formatStr: string = "dd/MM/yyyy HH:mm"
+): string => {
+  // Extrair apenas a data (YYYY-MM-DD) da string ISO
+  const dateStr = extractDateOnly(isoString);
+  const [year, month, day] = dateStr.split("-").map(Number);
+
+  // Criar data no timezone local
+  const date = new Date(year, month - 1, day);
+
+  // Se o formato inclui hora, tentar extrair da string original
+  if (formatStr.includes("HH:mm") || formatStr.includes("HH:mm:ss")) {
+    const timeMatch = isoString.match(/T(\d{2}):(\d{2})(?::(\d{2}))?/);
+    if (timeMatch) {
+      date.setHours(
+        parseInt(timeMatch[1]),
+        parseInt(timeMatch[2]),
+        timeMatch[3] ? parseInt(timeMatch[3]) : 0
+      );
+    }
+  }
+
+  return format(date, formatStr);
+};
+
 export default function Sales() {
   const {
     sales,
     products,
     editingSale,
     isLoading,
+    paginationMeta,
+    currentPage,
+    setCurrentPage,
+    pageSize,
     form,
     fields,
     addSaleItem,
@@ -73,9 +116,25 @@ export default function Sales() {
     handleDeleteClick,
     handleConfirmDelete,
     deleteSale,
+    selectedSales,
+    bulkDeleteDialogOpen,
+    setBulkDeleteDialogOpen,
+    toggleSelect,
+    toggleSelectAll,
+    clearSelection,
+    handleBulkDeleteClick,
+    handleConfirmBulkDelete,
+    bulkDeleteSales,
+    filtersForm,
+    showFilters,
+    setShowFilters,
+    hasActiveFilters,
+    clearFilters,
     createSale,
     updateSale,
   } = useSalesPage();
+
+  const navigate = useNavigate();
 
   // Estado local para valores temporários dos inputs de quantidade
   const [quantityInputs, setQuantityInputs] = useState<Record<number, string>>(
@@ -131,7 +190,7 @@ export default function Sales() {
               Nova Venda
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto z-50 w-full">
+          <DialogContent className="sm:max-w-4xl">
             <DialogHeader>
               <DialogTitle>
                 {editingSale ? "Editar Venda" : "Nova Venda"}
@@ -142,8 +201,11 @@ export default function Sales() {
                   : "Adicione os produtos vendidos"}
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-3 sm:space-y-4"
+            >
+              <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="space-y-2">
                   <Label htmlFor="customer">Cliente (Opcional)</Label>
                   <CustomerSelect
@@ -191,6 +253,15 @@ export default function Sales() {
                     error={form.formState.errors.saleDate?.message}
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="saleTime">Hora da Venda *</Label>
+                  <Input
+                    id="saleTime"
+                    type="time"
+                    {...form.register("saleTime")}
+                    error={form.formState.errors.saleTime?.message}
+                  />
+                </div>
               </div>
 
               <div className="space-y-4">
@@ -224,7 +295,7 @@ export default function Sales() {
                   return (
                     <div
                       key={field.id}
-                      className="flex sm:flex-row gap-2 items-end p-4 border rounded-lg"
+                      className="flex flex-col sm:flex-row gap-3 sm:gap-2 items-stretch sm:items-end p-3 sm:p-4 border rounded-lg"
                     >
                       <div className="flex-1 w-full space-y-2">
                         <Label>Produto</Label>
@@ -244,8 +315,8 @@ export default function Sales() {
                           </p>
                         )}
                       </div>
-                      <div className="w-full sm:w-24 space-y-2">
-                        <Label>Qtd</Label>
+                      <div className="w-full sm:w-28 space-y-2">
+                        <Label>Quantidade</Label>
                         <Input
                           type="number"
                           step="0.01"
@@ -320,12 +391,13 @@ export default function Sales() {
                           }
                         />
                       </div>
-                      <div className="flex items-center h-[2.5rem]">
+                      <div className="flex items-center justify-end sm:justify-start h-[2.5rem] sm:h-auto">
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
                           onClick={() => removeSaleItem(index)}
+                          className="sm:mt-0"
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
@@ -342,12 +414,15 @@ export default function Sales() {
                   {...form.register("notes")}
                   rows={3}
                   placeholder="Observações sobre a venda..."
+                  className="resize-none"
                 />
               </div>
 
-              <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/50">
-                <span className="font-semibold">Total:</span>
-                <span className="text-2xl font-bold text-primary">
+              <div className="flex items-center justify-between rounded-lg border p-3 sm:p-4 bg-muted/50">
+                <span className="font-semibold text-sm sm:text-base">
+                  Total:
+                </span>
+                <span className="text-xl sm:text-2xl font-bold text-primary">
                   {new Intl.NumberFormat("pt-BR", {
                     style: "currency",
                     currency: "BRL",
@@ -355,7 +430,7 @@ export default function Sales() {
                 </span>
               </div>
 
-              <div className="flex justify-end gap-3">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-2">
                 <Button
                   type="button"
                   variant="outline"
@@ -382,12 +457,104 @@ export default function Sales() {
         </Dialog>
       </div>
 
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="mr-2 h-4 w-4" />
+            Filtros
+            {hasActiveFilters && (
+              <span className="ml-2 bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs">
+                1
+              </span>
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {showFilters && (
+        <Card className="mb-4">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Filter className="h-5 w-5" />
+                Filtros
+              </CardTitle>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  <X className="mr-2 h-4 w-4" />
+                  Limpar Filtros
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="search">Buscar</Label>
+                <Input
+                  id="search"
+                  placeholder="Produto ou cliente..."
+                  {...filtersForm.register("searchTerm")}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="startDate">Data Inicial</Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  {...filtersForm.register("startDate")}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="endDate">Data Final</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  {...filtersForm.register("endDate")}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
-          <CardTitle>Histórico de Vendas</CardTitle>
-          <CardDescription>
-            {sales.length} venda(s) registrada(s)
-          </CardDescription>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <CardTitle>Histórico de Vendas</CardTitle>
+              <CardDescription>
+                {paginationMeta
+                  ? `${paginationMeta.total} venda(s) encontrada(s) - Página ${paginationMeta.page} de ${paginationMeta.totalPages}`
+                  : `${sales.length} venda(s) registrada(s)`}
+                {hasActiveFilters && " (filtros aplicados)"}
+              </CardDescription>
+            </div>
+            {selectedSales.size > 0 && (
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  variant="destructive"
+                  onClick={handleBulkDeleteClick}
+                  disabled={bulkDeleteSales.isPending}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Excluir {selectedSales.size} selecionada(s)
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={clearSelection}
+                  className="h-9 w-9"
+                  title="Cancelar seleção"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="p-0 sm:p-6 sm:pt-0">
           {sales.length === 0 ? (
@@ -399,6 +566,15 @@ export default function Sales() {
               <Table className="min-w-[600px] w-full">
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={
+                          sales.length > 0 &&
+                          selectedSales.size === sales.length
+                        }
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </TableHead>
                     <TableHead>Data</TableHead>
                     <TableHead>Cliente</TableHead>
                     <TableHead>Produtos</TableHead>
@@ -421,7 +597,13 @@ export default function Sales() {
                     return (
                       <TableRow key={sale.id}>
                         <TableCell>
-                          {format(new Date(sale.saleDate), "dd/MM/yyyy HH:mm")}
+                          <Checkbox
+                            checked={selectedSales.has(sale.id)}
+                            onCheckedChange={() => toggleSelect(sale.id)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          {formatSaleDate(sale.saleDate, "dd/MM/yyyy HH:mm")}
                         </TableCell>
                         <TableCell>
                           {sale.customer?.name || "Cliente não informado"}
@@ -429,13 +611,31 @@ export default function Sales() {
                         <TableCell>
                           <div className="space-y-1">
                             {sale.saleItems.map((item, idx) => {
-                              const product = products.find(
-                                (p) => p.id === item.productId
-                              );
+                              const product = item.productId
+                                ? products.find((p) => p.id === item.productId)
+                                : null;
+                              const productName =
+                                item.productName ||
+                                product?.name ||
+                                "Produto desconhecido";
                               return (
                                 <div key={idx} className="text-sm">
-                                  {product?.name || "Produto desconhecido"} x{" "}
-                                  {item.quantity}
+                                  {item.productId ? (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        navigate(
+                                          `/products?productId=${item.productId}`
+                                        )
+                                      }
+                                      className="text-primary hover:underline font-medium"
+                                    >
+                                      {productName}
+                                    </button>
+                                  ) : (
+                                    <span>{productName}</span>
+                                  )}{" "}
+                                  x {item.quantity}
                                 </div>
                               );
                             })}
@@ -485,6 +685,42 @@ export default function Sales() {
               </Table>
             </div>
           )}
+          {paginationMeta && paginationMeta.totalPages > 1 && (
+            <div className="flex items-center justify-between px-6 py-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                Mostrando {(currentPage - 1) * pageSize + 1} a{" "}
+                {Math.min(currentPage * pageSize, paginationMeta.total)} de{" "}
+                {paginationMeta.total} vendas
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  disabled={currentPage === 1}
+                >
+                  Anterior
+                </Button>
+                <div className="text-sm">
+                  Página {currentPage} de {paginationMeta.totalPages}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage((prev) =>
+                      Math.min(paginationMeta.totalPages, prev + 1)
+                    )
+                  }
+                  disabled={currentPage === paginationMeta.totalPages}
+                >
+                  Próxima
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -505,6 +741,39 @@ export default function Sales() {
               disabled={deleteSale.isPending}
             >
               {deleteSale.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Excluindo...
+                </>
+              ) : (
+                "Excluir"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir {selectedSales.size} venda(s)? Esta
+              ação não pode ser desfeita e o estoque dos produtos será
+              restaurado.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmBulkDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={bulkDeleteSales.isPending}
+            >
+              {bulkDeleteSales.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Excluindo...

@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SearchableSelect } from "@/components/ui/searchable-select";
+import { MultiSelectSearchable } from "@/components/ui/multi-select-searchable";
 import {
   TrendingUp,
   TrendingDown,
@@ -69,7 +69,7 @@ const COLORS = [
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [chartType, setChartType] = useState<"bar" | "line">("bar");
+  const [chartType, setChartType] = useState<"bar" | "line">("line");
   const [showFilters, setShowFilters] = useState(false);
 
   // Filtros
@@ -82,8 +82,8 @@ export default function Dashboard() {
     const date = new Date();
     return date.toISOString().split("T")[0];
   });
-  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
-  const [productFilter, setProductFilter] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
+  const [productFilter, setProductFilter] = useState<string[]>([]);
 
   const now = new Date();
   const currentYear = now.getFullYear();
@@ -99,6 +99,16 @@ export default function Dashboard() {
   const { data: allTopProducts = [], isLoading: topProductsLoading } =
     useTopProducts(5);
 
+  // Helper para extrair apenas a data (YYYY-MM-DD) de uma string ISO, ignorando timezone
+  const extractDateOnly = (isoString: string): string => {
+    // Se a string já está no formato YYYY-MM-DD, retorna direto
+    if (isoString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      return isoString;
+    }
+    // Extrai apenas a parte da data (YYYY-MM-DD) da string ISO
+    return isoString.split('T')[0];
+  };
+
   // Filtrar vendas baseado nos filtros
   const filteredSales = useMemo(() => {
     let filtered = [...sales];
@@ -106,13 +116,10 @@ export default function Dashboard() {
     // Filtro de período
     if (startDate || endDate) {
       filtered = filtered.filter((sale) => {
-        const saleDate = new Date(sale.saleDate);
-        // Normalizar a data da venda para comparar apenas a data (sem horas)
-        const saleDateOnly = new Date(
-          saleDate.getFullYear(),
-          saleDate.getMonth(),
-          saleDate.getDate()
-        );
+        // Extrair apenas a data (YYYY-MM-DD) da string ISO, ignorando timezone
+        const saleDateStr = extractDateOnly(sale.saleDate);
+        const [saleYear, saleMonth, saleDay] = saleDateStr.split("-").map(Number);
+        const saleDateOnly = new Date(saleYear, saleMonth - 1, saleDay);
 
         if (startDate) {
           // Parse da data no formato YYYY-MM-DD como horário local
@@ -135,30 +142,41 @@ export default function Dashboard() {
       });
     }
 
-    // Filtro de categoria
-    if (categoryFilter && categoryFilter !== "all") {
-      if (categoryFilter === "sem_categoria") {
-        // Filtrar vendas que têm produtos sem categoria
-        filtered = filtered.filter((sale) => {
-          return sale.saleItems.some((item) => {
-            const product = products.find((p) => p.id === item.productId);
-            return !product?.category || product.category === null;
-          });
+    // Filtro de categoria (multi-select)
+    if (categoryFilter.length > 0) {
+      const hasSemCategoria = categoryFilter.includes("sem_categoria");
+      filtered = filtered.filter((sale) => {
+        return sale.saleItems.some((item) => {
+          const product = products.find((p) => p.id === item.productId);
+          if (!product) return false;
+          
+          // Buscar o nome da categoria do produto
+          const productCategoryName = product.category
+            ? categories.find(
+                (cat) =>
+                  cat.id === product.category || cat.name === product.category
+              )?.name || product.category
+            : null;
+
+          // Verificar se o produto passa no filtro
+          if (!productCategoryName) {
+            // Produto sem categoria
+            return hasSemCategoria;
+          } else {
+            // Produto com categoria - verificar se está na lista de filtros
+            return categoryFilter.some((filterCat) => {
+              if (filterCat === "sem_categoria") return false;
+              return productCategoryName === filterCat;
+            });
+          }
         });
-      } else {
-        filtered = filtered.filter((sale) => {
-          return sale.saleItems.some((item) => {
-            const product = products.find((p) => p.id === item.productId);
-            return product?.category === categoryFilter;
-          });
-        });
-      }
+      });
     }
 
-    // Filtro de produto
-    if (productFilter && productFilter !== "all") {
+    // Filtro de produto (multi-select)
+    if (productFilter.length > 0) {
       filtered = filtered.filter((sale) => {
-        return sale.saleItems.some((item) => item.productId === productFilter);
+        return sale.saleItems.some((item) => productFilter.includes(item.productId));
       });
     }
 
@@ -168,8 +186,8 @@ export default function Dashboard() {
   const hasActiveFilters =
     startDate ||
     endDate ||
-    (categoryFilter && categoryFilter !== "all") ||
-    (productFilter && productFilter !== "all");
+    categoryFilter.length > 0 ||
+    productFilter.length > 0;
 
   // Filtrar top products baseado nos filtros
   const topProducts = useMemo(() => {
@@ -254,15 +272,12 @@ export default function Dashboard() {
     date.setDate(1);
     setStartDate(date.toISOString().split("T")[0]);
     setEndDate(new Date().toISOString().split("T")[0]);
-    setCategoryFilter(null);
-    setProductFilter(null);
+    setCategoryFilter([]);
+    setProductFilter([]);
   };
 
-  // Preparar dados para gráfico de vendas dos últimos 7 dias (ou período filtrado)
+  // Preparar dados para gráfico de vendas (período filtrado, desconsiderando dias sem vendas)
   const salesChartData = useMemo(() => {
-    const start = startDate ? new Date(startDate) : new Date();
-    const end = endDate ? new Date(endDate) : new Date();
-
     // Se não há filtro de data, usar últimos 7 dias
     if (!startDate && !endDate) {
       const last7Days = Array.from({ length: 7 }, (_, i) => {
@@ -272,10 +287,19 @@ export default function Dashboard() {
         return date;
       });
 
-      return last7Days.map((date) => {
+      const data = last7Days.map((date) => {
         const daySales = filteredSales.filter((sale) => {
-          const saleDate = new Date(sale.saleDate);
-          return saleDate.toDateString() === date.toDateString();
+          // Extrair apenas a data (YYYY-MM-DD) da string ISO, ignorando timezone
+          const saleDateStr = extractDateOnly(sale.saleDate);
+          const [saleYear, saleMonth, saleDay] = saleDateStr.split("-").map(Number);
+          const saleDateOnly = new Date(saleYear, saleMonth - 1, saleDay);
+          
+          const dateOnly = new Date(
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDate()
+          );
+          return saleDateOnly.getTime() === dateOnly.getTime();
         });
         const total = daySales.reduce(
           (sum, sale) => sum + Number(sale.totalAmount),
@@ -287,9 +311,31 @@ export default function Dashboard() {
           count: daySales.length,
         };
       });
+
+      // Filtrar dias sem vendas
+      return data.filter((item) => item.total > 0);
     }
 
     // Se há filtro de data, usar o período filtrado
+    // Parse da data no formato YYYY-MM-DD como horário local (mesmo método usado no filtro)
+    let start: Date;
+    if (startDate) {
+      const [startYear, startMonth, startDay] = startDate.split("-").map(Number);
+      start = new Date(startYear, startMonth - 1, startDay);
+    } else {
+      start = new Date();
+      start.setHours(0, 0, 0, 0);
+    }
+
+    let end: Date;
+    if (endDate) {
+      const [endYear, endMonth, endDay] = endDate.split("-").map(Number);
+      end = new Date(endYear, endMonth - 1, endDay);
+    } else {
+      end = new Date();
+      end.setHours(0, 0, 0, 0);
+    }
+
     const days: Date[] = [];
     const current = new Date(start);
     while (current <= end) {
@@ -297,10 +343,19 @@ export default function Dashboard() {
       current.setDate(current.getDate() + 1);
     }
 
-    return days.map((date) => {
+    const data = days.map((date) => {
       const daySales = filteredSales.filter((sale) => {
-        const saleDate = new Date(sale.saleDate);
-        return saleDate.toDateString() === date.toDateString();
+        // Extrair apenas a data (YYYY-MM-DD) da string ISO, ignorando timezone
+        const saleDateStr = extractDateOnly(sale.saleDate);
+        const [saleYear, saleMonth, saleDay] = saleDateStr.split("-").map(Number);
+        const saleDateOnly = new Date(saleYear, saleMonth - 1, saleDay);
+        
+        const dateOnly = new Date(
+          date.getFullYear(),
+          date.getMonth(),
+          date.getDate()
+        );
+        return saleDateOnly.getTime() === dateOnly.getTime();
       });
       const total = daySales.reduce(
         (sum, sale) => sum + Number(sale.totalAmount),
@@ -312,7 +367,33 @@ export default function Dashboard() {
         count: daySales.length,
       };
     });
+
+    // Filtrar dias sem vendas
+    return data.filter((item) => item.total > 0);
   }, [filteredSales, startDate, endDate]);
+
+  // Título do gráfico baseado nos filtros
+  const chartTitle = useMemo(() => {
+    if (startDate && endDate) {
+      // Parse da data no formato YYYY-MM-DD como horário local (mesmo método usado no filtro)
+      const [startYear, startMonth, startDay] = startDate.split("-").map(Number);
+      const start = format(new Date(startYear, startMonth - 1, startDay), "dd/MM/yyyy");
+      
+      const [endYear, endMonth, endDay] = endDate.split("-").map(Number);
+      const end = format(new Date(endYear, endMonth - 1, endDay), "dd/MM/yyyy");
+      
+      return `Vendas de ${start} a ${end}`;
+    } else if (startDate) {
+      const [startYear, startMonth, startDay] = startDate.split("-").map(Number);
+      const start = format(new Date(startYear, startMonth - 1, startDay), "dd/MM/yyyy");
+      return `Vendas a partir de ${start}`;
+    } else if (endDate) {
+      const [endYear, endMonth, endDay] = endDate.split("-").map(Number);
+      const end = format(new Date(endYear, endMonth - 1, endDay), "dd/MM/yyyy");
+      return `Vendas até ${end}`;
+    }
+    return "Vendas dos Últimos 7 Dias";
+  }, [startDate, endDate]);
 
   // Preparar dados para gráfico de pizza de categorias mais vendidas
   const topCategories = useMemo(() => {
@@ -321,9 +402,16 @@ export default function Dashboard() {
     filteredSales.forEach((sale) => {
       sale.saleItems.forEach((item) => {
         const product = products.find((p) => p.id === item.productId);
-        const category = product?.category || "Sem categoria";
-        const current = categoryMap.get(category) || 0;
-        categoryMap.set(category, current + Number(item.subtotal));
+        // Buscar o nome da categoria ou usar "Sem categoria"
+        let categoryName = "Sem categoria";
+        if (product?.category) {
+          const category = categories.find(
+            (cat) => cat.id === product.category || cat.name === product.category
+          );
+          categoryName = category?.name || product.category;
+        }
+        const current = categoryMap.get(categoryName) || 0;
+        categoryMap.set(categoryName, current + Number(item.subtotal));
       });
     });
 
@@ -335,7 +423,7 @@ export default function Dashboard() {
     // Ordenar por valor e pegar top 6
     categoryData.sort((a, b) => b.value - a.value);
     return categoryData.slice(0, 6);
-  }, [filteredSales, products]);
+  }, [filteredSales, products, categories]);
 
   if (isLoading) {
     return <DashboardShimmer />;
@@ -394,8 +482,8 @@ export default function Dashboard() {
                     [
                       startDate,
                       endDate,
-                      categoryFilter && categoryFilter !== "all",
-                      productFilter && productFilter !== "all",
+                      categoryFilter.length > 0,
+                      productFilter.length > 0,
                     ].filter(Boolean).length
                   }
                 </Badge>
@@ -448,36 +536,32 @@ export default function Dashboard() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="category">Categoria</Label>
-                  <SearchableSelect
+                  <Label htmlFor="category">Categorias</Label>
+                  <MultiSelectSearchable
                     value={categoryFilter}
                     onChange={(value) => setCategoryFilter(value)}
                     options={[
-                      { value: "all", label: "Todas" },
                       { value: "sem_categoria", label: "Sem categoria" },
                       ...categories.map((cat) => ({
                         value: cat.name,
                         label: cat.name,
                       })),
                     ]}
-                    placeholder="Todas as categorias"
+                    placeholder="Selecione categorias..."
                     searchPlaceholder="Buscar categoria..."
                     emptyMessage="Nenhuma categoria encontrada."
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="product">Produto</Label>
-                  <SearchableSelect
+                  <Label htmlFor="product">Produtos</Label>
+                  <MultiSelectSearchable
                     value={productFilter}
                     onChange={(value) => setProductFilter(value)}
-                    options={[
-                      { value: "all", label: "Todos" },
-                      ...products.map((prod) => ({
-                        value: prod.id,
-                        label: prod.name,
-                      })),
-                    ]}
-                    placeholder="Todos os produtos"
+                    options={products.map((prod) => ({
+                      value: prod.id,
+                      label: prod.name,
+                    }))}
+                    placeholder="Selecione produtos..."
                     searchPlaceholder="Buscar produto..."
                     emptyMessage="Nenhum produto encontrado."
                   />
@@ -575,8 +659,12 @@ export default function Dashboard() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Vendas dos Últimos 7 Dias</CardTitle>
-                  <CardDescription>Gráfico de vendas diárias</CardDescription>
+                  <CardTitle>{chartTitle}</CardTitle>
+                  <CardDescription>
+                    {salesChartData.length > 0
+                      ? `${salesChartData.length} dia(s) com vendas`
+                      : "Nenhuma venda no período"}
+                  </CardDescription>
                 </div>
                 <Tabs
                   value={chartType}
@@ -703,13 +791,22 @@ export default function Dashboard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {recentSales.map((sale) => (
+                      {recentSales.map((sale) => {
+                        // Extrair apenas a data (YYYY-MM-DD) da string ISO, ignorando timezone
+                        const saleDateStr = extractDateOnly(sale.saleDate);
+                        const [saleYear, saleMonth, saleDay] = saleDateStr.split("-").map(Number);
+                        const saleDate = new Date(saleYear, saleMonth - 1, saleDay);
+                        
+                        // Tentar extrair hora da string original se disponível
+                        const timeMatch = sale.saleDate.match(/T(\d{2}):(\d{2})(?::(\d{2}))?/);
+                        if (timeMatch) {
+                          saleDate.setHours(parseInt(timeMatch[1]), parseInt(timeMatch[2]), timeMatch[3] ? parseInt(timeMatch[3]) : 0);
+                        }
+                        
+                        return (
                         <TableRow key={sale.id}>
                           <TableCell>
-                            {format(
-                              new Date(sale.saleDate),
-                              "dd/MM/yyyy HH:mm"
-                            )}
+                            {format(saleDate, "dd/MM/yyyy HH:mm")}
                           </TableCell>
                           <TableCell>
                             {sale.customer?.name || "Cliente não informado"}
@@ -721,7 +818,7 @@ export default function Dashboard() {
                             }).format(sale.totalAmount)}
                           </TableCell>
                         </TableRow>
-                      ))}
+                      )})}
                     </TableBody>
                   </Table>
                 </div>

@@ -2,37 +2,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, getErrorMessage } from "@/lib/api";
 import { useCurrentUserId } from "@/hooks/use-auth";
 import { toast } from "sonner";
-
-export interface Product {
-  id: string;
-  userId: string;
-  name: string;
-  description: string | null;
-  category: string | null;
-  costPrice: number;
-  salePrice: number;
-  stockQuantity: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateProductDto {
-  name: string;
-  description?: string | null;
-  category?: string | null;
-  costPrice: number;
-  salePrice: number;
-  stockQuantity: number;
-}
-
-export interface UpdateProductDto {
-  name?: string;
-  description?: string | null;
-  category?: string | null;
-  costPrice?: number;
-  salePrice?: number;
-  stockQuantity?: number;
-}
+import type {
+  Product,
+  CreateProductDto,
+  UpdateProductDto,
+  ProductFilters,
+  ProductsResponse,
+} from "@/types/products";
+import type { PaginatedResponse } from "@/types/pagination";
 
 export function useProducts() {
   const { data: userId } = useCurrentUserId();
@@ -41,7 +18,40 @@ export function useProducts() {
     queryKey: ["products", userId],
     queryFn: async () => {
       if (!userId) throw new Error("Usuário não autenticado");
-      const response = await api.get<{ data: Product[] }>("/products");
+      const response = await api.get<{ data: ProductsResponse }>("/products");
+      const data = response.data.data;
+      // Se for objeto paginado (tem propriedade 'data' e 'meta'), extrair o array
+      if (data && typeof data === 'object' && !Array.isArray(data) && 'data' in data && 'meta' in data) {
+        return (data as PaginatedResponse<Product>).data;
+      }
+      // Caso contrário, retornar como array
+      return Array.isArray(data) ? data : [];
+    },
+    enabled: !!userId,
+  });
+}
+
+export function useProductsWithFilters(filters: ProductFilters) {
+  const { data: userId } = useCurrentUserId();
+  
+  return useQuery({
+    queryKey: ["products", "filtered", filters, userId],
+    queryFn: async () => {
+      if (!userId) throw new Error("Usuário não autenticado");
+      const params = new URLSearchParams();
+      if (filters.page) params.append("page", filters.page.toString());
+      if (filters.limit) params.append("limit", filters.limit.toString());
+      if (filters.search) params.append("search", filters.search);
+      if (filters.categories && filters.categories.length > 0) {
+        filters.categories.forEach(cat => params.append("categories", cat));
+      }
+      if (filters.lowStock !== undefined) params.append("lowStock", filters.lowStock.toString());
+      if (filters.minSalePrice) params.append("minSalePrice", filters.minSalePrice.toString());
+      if (filters.maxSalePrice) params.append("maxSalePrice", filters.maxSalePrice.toString());
+      if (filters.minCostPrice) params.append("minCostPrice", filters.minCostPrice.toString());
+      if (filters.maxCostPrice) params.append("maxCostPrice", filters.maxCostPrice.toString());
+      
+      const response = await api.get<{ data: PaginatedResponse<Product> }>(`/products?${params.toString()}`);
       return response.data.data;
     },
     enabled: !!userId,
@@ -115,6 +125,25 @@ export function useDeleteProduct() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       toast.success("Produto excluído com sucesso!");
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useBulkDeleteProducts() {
+  const queryClient = useQueryClient();
+  const { data: userId } = useCurrentUserId();
+
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (!userId) throw new Error("Usuário não autenticado");
+      await api.delete("/products/bulk", { data: { ids } });
+    },
+    onSuccess: (_, ids) => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success(`${ids.length} produto(s) excluído(s) com sucesso!`);
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error));

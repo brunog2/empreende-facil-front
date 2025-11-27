@@ -2,59 +2,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, getErrorMessage } from "@/lib/api";
 import { useCurrentUserId } from "@/hooks/use-auth";
 import { toast } from "sonner";
-
-export interface SaleItem {
-  id: string;
-  saleId: string;
-  productId: string;
-  quantity: number;
-  unitPrice: number;
-  subtotal: number;
-  product?: {
-    id: string;
-    name: string;
-  };
-}
-
-export interface Sale {
-  id: string;
-  userId: string;
-  customerId: string | null;
-  totalAmount: number;
-  paymentMethod: string | null;
-  notes: string | null;
-  saleDate: string;
-  createdAt: string;
-  customer?: {
-    id: string;
-    name: string;
-  } | null;
-  saleItems: SaleItem[];
-}
-
-export interface CreateSaleItemDto {
-  productId: string;
-  quantity: number;
-  unitPrice: number;
-}
-
-export interface CreateSaleDto {
-  customerId?: string | null;
-  totalAmount: number;
-  paymentMethod?: string | null;
-  notes?: string | null;
-  saleDate?: Date;
-  items: CreateSaleItemDto[];
-}
-
-export interface UpdateSaleDto {
-  customerId?: string | null;
-  totalAmount?: number;
-  paymentMethod?: string | null;
-  notes?: string | null;
-  saleDate?: Date;
-  items?: CreateSaleItemDto[];
-}
+import type {
+  Sale,
+  SaleItem,
+  CreateSaleDto,
+  CreateSaleItemDto,
+  UpdateSaleDto,
+  SaleFilters,
+  SalesResponse,
+} from "@/types/sales";
+import type { PaginatedResponse } from "@/types/pagination";
 
 export function useSales() {
   const { data: userId } = useCurrentUserId();
@@ -63,7 +20,40 @@ export function useSales() {
     queryKey: ["sales", userId],
     queryFn: async () => {
       if (!userId) throw new Error("Usuário não autenticado");
-      const response = await api.get<{ data: Sale[] }>("/sales");
+      const response = await api.get<{ data: SalesResponse }>("/sales");
+      const data = response.data.data;
+      // Se for objeto paginado (tem propriedade 'data' e 'meta'), extrair o array
+      if (data && typeof data === 'object' && !Array.isArray(data) && 'data' in data && 'meta' in data) {
+        return (data as PaginatedResponse<Sale>).data;
+      }
+      // Caso contrário, retornar como array
+      return Array.isArray(data) ? data : [];
+    },
+    enabled: !!userId,
+  });
+}
+
+export function useSalesWithFilters(filters: SaleFilters) {
+  const { data: userId } = useCurrentUserId();
+  
+  return useQuery({
+    queryKey: ["sales", "filtered", filters, userId],
+    queryFn: async () => {
+      if (!userId) throw new Error("Usuário não autenticado");
+      const params = new URLSearchParams();
+      if (filters.page) params.append("page", filters.page.toString());
+      if (filters.limit) params.append("limit", filters.limit.toString());
+      if (filters.search) params.append("search", filters.search);
+      if (filters.categories && filters.categories.length > 0) {
+        filters.categories.forEach(cat => params.append("categories", cat));
+      }
+      if (filters.products && filters.products.length > 0) {
+        filters.products.forEach(prod => params.append("products", prod));
+      }
+      if (filters.startDate) params.append("startDate", filters.startDate);
+      if (filters.endDate) params.append("endDate", filters.endDate);
+      
+      const response = await api.get<{ data: PaginatedResponse<Sale> }>(`/sales?${params.toString()}`);
       return response.data.data;
     },
     enabled: !!userId,
@@ -143,6 +133,27 @@ export function useDeleteSale() {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Venda excluída com sucesso!");
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useBulkDeleteSales() {
+  const queryClient = useQueryClient();
+  const { data: userId } = useCurrentUserId();
+
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (!userId) throw new Error("Usuário não autenticado");
+      await api.delete("/sales/bulk", { data: { ids } });
+    },
+    onSuccess: (_, ids) => {
+      queryClient.invalidateQueries({ queryKey: ["sales"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success(`${ids.length} venda(s) excluída(s) com sucesso!`);
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error));

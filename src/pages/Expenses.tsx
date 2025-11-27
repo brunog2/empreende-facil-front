@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Loader2, Filter, TrendingDown } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Filter, TrendingDown, X } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { ExpensesShimmer } from "@/components/shimmer/ExpensesShimmer";
 import { CurrencyInput } from "@/components/ui/currency-input";
@@ -47,6 +48,15 @@ export default function Expenses() {
     handleDeleteClick,
     handleConfirmDelete,
     deleteExpense,
+    selectedExpenses,
+    bulkDeleteDialogOpen,
+    setBulkDeleteDialogOpen,
+    toggleSelect,
+    toggleSelectAll,
+    clearSelection,
+    handleBulkDeleteClick,
+    handleConfirmBulkDelete,
+    bulkDeleteExpenses,
     categoryFilter,
     setCategoryFilter,
     recurringFilter,
@@ -74,14 +84,14 @@ export default function Expenses() {
               Nova Despesa
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>{editingExpense ? "Editar Despesa" : "Nova Despesa"}</DialogTitle>
               <DialogDescription>
                 {editingExpense ? "Atualize os dados da despesa" : "Registre uma despesa ou custo do negócio"}
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="description">Descrição *</Label>
                 <Input
@@ -91,7 +101,7 @@ export default function Expenses() {
                   error={form.formState.errors.description?.message}
                 />
               </div>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="amount">Valor *</Label>
                   <CurrencyInput
@@ -158,7 +168,7 @@ export default function Expenses() {
                   )}
                 </div>
               )}
-              <div className="flex justify-end gap-3">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-2">
                 <Button type="button" variant="outline" onClick={handleCloseDialog}>
                   Cancelar
                 </Button>
@@ -267,10 +277,35 @@ export default function Expenses() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Lista de Despesas</CardTitle>
-          <CardDescription>
-            {expenses.length} despesa(s) {categoryFilter ? `na categoria "${categoryFilter}"` : ""} {recurringFilter !== null ? (recurringFilter ? "recorrentes" : "avulsas") : ""}
-          </CardDescription>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <CardTitle>Lista de Despesas</CardTitle>
+              <CardDescription>
+                {expenses.length} despesa(s) {categoryFilter ? `na categoria "${categoryFilter}"` : ""} {recurringFilter !== null ? (recurringFilter ? "recorrentes" : "avulsas") : ""}
+              </CardDescription>
+            </div>
+            {selectedExpenses.size > 0 && (
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  variant="destructive"
+                  onClick={handleBulkDeleteClick}
+                  disabled={bulkDeleteExpenses.isPending}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Excluir {selectedExpenses.size} selecionada(s)
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={clearSelection}
+                  className="h-9 w-9"
+                  title="Cancelar seleção"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="p-0 sm:p-6 sm:pt-0">
           {expenses.length === 0 ? (
@@ -282,6 +317,15 @@ export default function Expenses() {
               <Table className="min-w-[600px] w-full">
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={
+                          expenses.length > 0 &&
+                          selectedExpenses.size === expenses.length
+                        }
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </TableHead>
                     <TableHead>Descrição</TableHead>
                     <TableHead>Categoria</TableHead>
                     <TableHead>Data</TableHead>
@@ -292,6 +336,12 @@ export default function Expenses() {
                 <TableBody>
                 {expenses.map((expense) => (
                   <TableRow key={expense.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedExpenses.has(expense.id)}
+                        onCheckedChange={() => toggleSelect(expense.id)}
+                      />
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {expense.description}
@@ -354,6 +404,38 @@ export default function Expenses() {
               disabled={deleteExpense.isPending}
             >
               {deleteExpense.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Excluindo...
+                </>
+              ) : (
+                "Excluir"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir {selectedExpenses.size} despesa(s)?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmBulkDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={bulkDeleteExpenses.isPending}
+            >
+              {bulkDeleteExpenses.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Excluindo...
