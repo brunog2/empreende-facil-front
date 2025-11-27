@@ -61,11 +61,12 @@ import { CurrencyInput } from "@/components/ui/currency-input";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { MultiSelectSearchable } from "@/components/ui/multi-select-searchable";
 import { useProductsPage } from "@/hooks/use-products-page";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
 export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const {
     products,
     allProducts,
@@ -496,7 +497,12 @@ export default function Products() {
                         </TableCell>
                         <TableCell>
                           <div>
-                            <div className="font-medium">{product.name}</div>
+                            <button
+                              onClick={() => navigate(`/produtos/${product.id}`)}
+                              className="font-medium hover:text-primary hover:underline text-left"
+                            >
+                              {product.name}
+                            </button>
                             {product.description && (
                               <div className="text-sm text-muted-foreground line-clamp-2">
                                 {product.description}
