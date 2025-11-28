@@ -190,8 +190,8 @@ export default function Sales() {
               Nova Venda
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-4xl sm:max-h-[90vh] sm:min-h-[640px] flex flex-col">
-            <DialogHeader className="flex-shrink-0">
+          <DialogContent className="sm:max-w-4xl sm:max-h-[90vh] sm:min-h-[640px] flex flex-col p-0 sm:p-6">
+            <DialogHeader className="flex-shrink-0 px-3 pt-3 sm:px-0 sm:pt-0">
               <DialogTitle>
                 {editingSale ? "Editar Venda" : "Nova Venda"}
               </DialogTitle>
@@ -201,7 +201,7 @@ export default function Sales() {
                   : "Adicione os produtos vendidos"}
               </DialogDescription>
             </DialogHeader>
-            <div className="flex-1 min-h-[400px] -mx-3 sm:-mx-6 px-3 sm:px-6 sm:overflow-y-auto">
+            <div className="flex-1 min-h-[400px] overflow-y-auto px-3 sm:px-0 pb-20 sm:pb-0">
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-3 sm:space-y-4"
@@ -438,7 +438,7 @@ export default function Sales() {
                 </div>
               </form>
             </div>
-            <div className="flex-shrink-0 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-2 border-t mt-2">
+            <div className="flex-shrink-0 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-2 sm:pt-4 border-t mt-2 sm:mt-0 px-3 pb-3 sm:px-0 sm:pb-0 bg-background sm:bg-transparent sticky bottom-0 sm:static z-10">
               <Button
                 type="button"
                 variant="outline"
