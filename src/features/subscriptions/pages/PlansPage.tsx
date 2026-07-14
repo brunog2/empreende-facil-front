@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, Crown, Sparkles } from "lucide-react";
+import { ArrowLeft, Check, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -22,26 +22,18 @@ import {
 
 const planOrder: Record<string, number> = {
   trial: 0,
-  founder: 1,
-  starter: 2,
-  pro: 3,
-  business: 4,
+  starter: 1,
+  pro: 2,
 };
 
+const availablePlanCodes = new Set(Object.keys(planOrder));
+
 function planButtonLabel(plan: Plan): string {
-  if (plan.code === "trial") return "Começar teste de 14 dias";
-  if (plan.code === "founder") return "Assinar plano Fundador";
+  if (plan.code === "trial") return "Começar grátis";
   return `Assinar ${plan.name}`;
 }
 
 function PlanBadge({ plan }: { plan: Plan }) {
-  if (plan.code === "founder") {
-    return (
-      <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap bg-amber-500 text-amber-950 hover:bg-amber-500">
-        <Crown className="mr-1 h-3.5 w-3.5" /> Oferta de lançamento
-      </Badge>
-    );
-  }
   if (plan.isRecommended) {
     return (
       <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
@@ -51,8 +43,11 @@ function PlanBadge({ plan }: { plan: Plan }) {
   }
   if (plan.code === "trial") {
     return (
-      <Badge variant="secondary" className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
-        Sem cartão
+      <Badge
+        variant="secondary"
+        className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap"
+      >
+        Grátis para sempre
       </Badge>
     );
   }
@@ -64,10 +59,12 @@ export default function PlansPage() {
   const { data: plans, isLoading } = usePlans();
   const changePlan = useChangePlan();
   const hasToken = Boolean(localStorage.getItem("accessToken"));
-  const sortedPlans = [...(plans ?? [])].sort(
-    (left, right) =>
-      (planOrder[left.code] ?? 99) - (planOrder[right.code] ?? 99),
-  );
+  const sortedPlans = [...(plans ?? [])]
+    .filter((plan) => availablePlanCodes.has(plan.code))
+    .sort(
+      (left, right) =>
+        (planOrder[left.code] ?? 99) - (planOrder[right.code] ?? 99),
+    );
 
   const goBack = () => navigate(hasToken ? "/assinatura" : "/auth");
 
@@ -110,38 +107,42 @@ export default function PlansPage() {
         </nav>
 
         <header className="mx-auto mb-12 max-w-3xl text-center">
-          <Badge variant="outline" className="mb-4 max-w-full whitespace-normal text-center">
+          <Badge
+            variant="outline"
+            className="mb-4 max-w-full whitespace-normal text-center"
+          >
             <Sparkles className="mr-1 h-3.5 w-3.5 shrink-0" />
-            Planos para cada fase do seu negócio
+            Três opções simples para escolher
           </Badge>
           <h1 className="font-display text-3xl font-bold tracking-tight sm:text-5xl">
             Escolha o plano ideal para crescer
           </h1>
           <p className="mt-4 text-base text-muted-foreground sm:text-lg">
-            Comece com 14 dias grátis, sem cartão. Todos os valores abaixo são mensais.
+            Comece gratuitamente e faça upgrade apenas quando precisar de mais
+            recursos ou capacidade.
           </p>
         </header>
 
         {isLoading ? (
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {[1, 2, 3, 4, 5].map((item) => (
-              <div key={item} className="h-[560px] animate-pulse rounded-xl bg-muted" />
+            {[1, 2, 3].map((item) => (
+              <div
+                key={item}
+                className="h-[560px] animate-pulse rounded-xl bg-muted"
+              />
             ))}
           </div>
         ) : (
           <div className="grid items-stretch gap-6 md:grid-cols-2 xl:grid-cols-3">
             {sortedPlans.map((plan) => {
-              const isFounder = plan.code === "founder";
-              const isTrial = plan.code === "trial";
+              const isFreePlan = plan.code === "trial";
               return (
                 <Card
                   key={plan.id}
                   className={`relative flex flex-col ${
                     plan.isRecommended
                       ? "border-primary shadow-xl shadow-primary/10"
-                      : isFounder
-                        ? "border-amber-400 bg-amber-50/40 shadow-xl shadow-amber-500/10"
-                        : ""
+                      : ""
                   }`}
                 >
                   <PlanBadge plan={plan} />
@@ -151,11 +152,11 @@ export default function PlansPage() {
                       {plan.description}
                     </CardDescription>
                     <div className="pt-4">
-                      {isTrial ? (
+                      {isFreePlan ? (
                         <>
-                          <span className="text-4xl font-bold">14 dias</span>
+                          <span className="text-4xl font-bold">Grátis</span>
                           <p className="mt-1 text-sm font-medium text-emerald-700">
-                            grátis e sem cartão
+                            para sempre e sem cartão
                           </p>
                         </>
                       ) : (
@@ -164,11 +165,6 @@ export default function PlansPage() {
                             {formatMoney(plan.monthlyPrice)}
                           </span>
                           <span className="text-muted-foreground">/mês</span>
-                          {isFounder && (
-                            <p className="mt-1 text-sm font-semibold text-amber-700">
-                              Condição promocional válida por {plan.durationMonths ?? 3} meses
-                            </p>
-                          )}
                         </>
                       )}
                     </div>
@@ -203,7 +199,7 @@ export default function PlansPage() {
                   <CardFooter>
                     <Button
                       className="w-full"
-                      variant={plan.isRecommended || isFounder ? "default" : "outline"}
+                      variant={plan.isRecommended ? "default" : "outline"}
                       disabled={changePlan.isPending}
                       onClick={() => selectPlan(plan)}
                     >

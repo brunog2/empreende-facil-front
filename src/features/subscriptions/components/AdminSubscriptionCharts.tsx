@@ -20,7 +20,7 @@ const colors = ["hsl(var(--primary))", "#10b981", "#f59e0b", "#ef4444", "#64748b
 
 export function AdminSubscriptionCharts({ metrics }: { metrics: SubscriptionMetrics }) {
   const statusData = [
-    { name: "Teste", value: metrics.trialing },
+    { name: "Teste legado", value: metrics.trialing },
     { name: "Ativas", value: metrics.active },
     { name: "Inadimplentes", value: metrics.pastDue },
     { name: "Suspensas", value: metrics.suspended },

@@ -28,8 +28,16 @@ export function PlanLimitWarningDialog() {
 
   const warning = useMemo(() => {
     if (!usage) return null;
-    return (Object.entries(usage) as Array<[keyof PlanUsage, PlanUsage[keyof PlanUsage]]>)
-      .filter(([, item]) => item.limit !== null && usagePercentage(item.current, item.limit) >= 80)
+    return (
+      Object.entries(usage) as Array<
+        [keyof PlanUsage, PlanUsage[keyof PlanUsage]]
+      >
+    )
+      .filter(
+        ([, item]) =>
+          item.limit !== null &&
+          usagePercentage(item.current, item.limit) >= 80,
+      )
       .sort(
         (left, right) =>
           usagePercentage(right[1].current, right[1].limit) -
@@ -51,6 +59,7 @@ export function PlanLimitWarningDialog() {
   const [resource, item] = warning;
   const percentage = usagePercentage(item.current, item.limit);
   const reached = percentage >= 100;
+  const canUpgrade = plan?.code !== "pro";
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -60,21 +69,33 @@ export function PlanLimitWarningDialog() {
             <Gauge className="h-5 w-5" />
           </div>
           <DialogTitle>
-            {reached ? "Você atingiu um limite do plano" : "Seu plano está próximo do limite"}
+            {reached
+              ? "Você atingiu um limite do plano"
+              : "Seu plano está próximo do limite"}
           </DialogTitle>
           <DialogDescription>
-            Você utilizou {item.current} de {item.limit} {labels[resource]}. Compare os planos para continuar crescendo sem interromper a operação.
+            Você utilizou {item.current} de {item.limit} {labels[resource]}.{" "}
+            {canUpgrade
+              ? "Compare os planos para continuar crescendo sem interromper a operação."
+              : "Você já está no plano mais completo. Revise os cadastros para continuar a operação."}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2 py-2">
-          <div className="flex justify-between text-sm"><span className="font-medium capitalize">{labels[resource]}</span><span>{percentage}% utilizado</span></div>
+          <div className="flex justify-between text-sm">
+            <span className="font-medium capitalize">{labels[resource]}</span>
+            <span>{percentage}% utilizado</span>
+          </div>
           <Progress value={percentage} />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Continuar no plano</Button>
-          <Button onClick={() => navigate("/planos")}>
-            Ver planos melhores <ArrowUpRight className="ml-2 h-4 w-4" />
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            {canUpgrade ? "Continuar no plano" : "Entendi"}
           </Button>
+          {canUpgrade && (
+            <Button onClick={() => navigate("/planos")}>
+              Ver planos melhores <ArrowUpRight className="ml-2 h-4 w-4" />
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

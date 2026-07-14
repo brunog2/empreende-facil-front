@@ -19,8 +19,8 @@ export function SubscriptionNotices() {
   const promotionalDays = daysUntil(subscription.planAccessEndsAt);
   if (promotionalDays !== null && [7, 3, 1].includes(promotionalDays)) {
     notices.push({
-      title: "Sua condição Fundador está terminando",
-      description: `O acesso promocional do plano Fundador termina em ${promotionalDays} ${promotionalDays === 1 ? "dia" : "dias"}. Escolha o próximo plano para não interromper a operação.`,
+      title: "Sua condição promocional está terminando",
+      description: `O acesso promocional termina em ${promotionalDays} ${promotionalDays === 1 ? "dia" : "dias"}. Escolha um dos planos disponíveis para não interromper a operação.`,
       icon: Clock3,
     });
   }
