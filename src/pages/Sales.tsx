@@ -339,7 +339,7 @@ export default function Sales() {
                                 const numValue = parseFloat(value);
                                 if (!isNaN(numValue) && numValue > 0) {
                                   form.setValue(
-                                    `items.${index}.quantity` as any,
+                                    `items.${index}.quantity` as `items.${number}.quantity`,
                                     numValue,
                                     { shouldValidate: true }
                                   );
@@ -357,7 +357,7 @@ export default function Sales() {
                                   : numValue;
                               // Atualiza o form e o estado local
                               form.setValue(
-                                `items.${index}.quantity` as any,
+                                `items.${index}.quantity` as `items.${number}.quantity`,
                                 finalValue,
                                 { shouldValidate: true }
                               );

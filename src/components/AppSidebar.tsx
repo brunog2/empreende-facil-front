@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LayoutDashboard, Package, ShoppingCart, Receipt, Users, LogOut, Tags, User, BookOpen } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Receipt, Users, LogOut, Tags, User, BookOpen, CreditCard } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -18,6 +18,9 @@ import {
 import { useCurrentUser } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { UserPermission } from "@/types/admin";
+import { useSubscription } from "@/features/subscriptions/context/SubscriptionProvider";
+import { PlanFeature } from "@/features/subscriptions/types/subscription";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,13 +32,20 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const menuItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Vendas", url: "/vendas", icon: ShoppingCart },
-  { title: "Produtos", url: "/produtos", icon: Package },
-  { title: "Categorias", url: "/categorias", icon: Tags },
-  { title: "Clientes", url: "/clientes", icon: Users },
-  { title: "Despesas", url: "/despesas", icon: Receipt },
+const menuItems: Array<{
+  title: string;
+  url: string;
+  icon: typeof LayoutDashboard;
+  permission?: UserPermission;
+  feature?: PlanFeature;
+}> = [
+  { title: "Dashboard", url: "/", icon: LayoutDashboard, permission: "dashboard", feature: "dashboard" },
+  { title: "Vendas", url: "/vendas", icon: ShoppingCart, permission: "sales", feature: "sales" },
+  { title: "Produtos", url: "/produtos", icon: Package, permission: "products", feature: "products" },
+  { title: "Categorias", url: "/categorias", icon: Tags, permission: "categories", feature: "categories" },
+  { title: "Clientes", url: "/clientes", icon: Users, permission: "customers", feature: "customers" },
+  { title: "Despesas", url: "/despesas", icon: Receipt, permission: "expenses", feature: "expenses" },
+  { title: "Assinatura", url: "/assinatura", icon: CreditCard },
   { title: "Documentação", url: "/documentacao", icon: BookOpen },
   { title: "Meu Perfil", url: "/perfil", icon: User },
 ];
@@ -47,6 +57,7 @@ export function AppSidebar() {
   const queryClient = useQueryClient();
   const collapsed = state === "collapsed";
   const { data: user } = useCurrentUser();
+  const { canAccessFeature } = useSubscription();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
   const handleLogout = () => {
@@ -110,8 +121,18 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => {
-                const isActive = location.pathname === item.url;
+              {menuItems
+                .filter(
+                  (item) =>
+                    !item.permission ||
+                    (user?.permissions.includes(item.permission) &&
+                      (!item.feature || canAccessFeature(item.feature))),
+                )
+                .map((item) => {
+                const isActive =
+                  item.url === "/"
+                    ? location.pathname === item.url
+                    : location.pathname.startsWith(item.url);
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton 

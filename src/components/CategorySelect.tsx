@@ -60,7 +60,10 @@ export function CategorySelect({ value, onChange, error }: CategorySelectProps) 
     }
     
     try {
-      const newCategory = await createCategory.mutateAsync(data);
+      const newCategory = await createCategory.mutateAsync({
+        name: data.name || "",
+        description: data.description,
+      });
       // Usar o ID da categoria para manter consistência com o backend
       onChange(newCategory.id);
       // Fechar apenas o modal de categoria, sem afetar outros modais
@@ -244,4 +247,3 @@ export function CategorySelect({ value, onChange, error }: CategorySelectProps) 
     </>
   );
 }
-

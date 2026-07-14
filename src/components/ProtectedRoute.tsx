@@ -1,8 +1,15 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useCurrentUser } from "@/hooks/use-auth";
+import { UserRole } from "@/types/admin";
 
-export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+export const ProtectedRoute = ({
+  children,
+  requiredRole,
+}: {
+  children: React.ReactNode;
+  requiredRole?: UserRole;
+}) => {
   const { data: user, isLoading, error } = useCurrentUser();
 
   if (isLoading) {
@@ -18,6 +25,15 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     return <Navigate to="/auth" replace />;
+  }
+
+  if (requiredRole && user.role !== requiredRole) {
+    return (
+      <Navigate
+        to={user.role === "admin" ? "/admin" : "/"}
+        replace
+      />
+    );
   }
 
   return <>{children}</>;

@@ -55,7 +55,10 @@ export function MultiSelectSearchable({
     }
   };
 
-  const handleRemove = (optionValue: string, e: React.MouseEvent) => {
+  const handleRemove = (
+    optionValue: string,
+    e: React.MouseEvent | React.KeyboardEvent,
+  ) => {
     e.stopPropagation();
     onChange(value.filter((v) => v !== optionValue));
   };
@@ -89,7 +92,7 @@ export function MultiSelectSearchable({
                       className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
-                          handleRemove(option.value, e as any);
+                          handleRemove(option.value, e);
                         }
                       }}
                       onMouseDown={(e) => {
@@ -142,4 +145,3 @@ export function MultiSelectSearchable({
     </div>
   );
 }
-

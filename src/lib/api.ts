@@ -1,5 +1,29 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
+export interface ApiErrorPayload {
+  statusCode?: number;
+  code?: string;
+  message?: string;
+  feature?: string;
+  currentUsage?: number;
+  limit?: number | null;
+  timestamp?: string;
+}
+
+export class ApiError extends Error {
+  readonly status?: number;
+  readonly code?: string;
+  readonly details: ApiErrorPayload;
+
+  constructor(message: string, status?: number, details: ApiErrorPayload = {}) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = details.code;
+    this.details = details;
+  }
+}
+
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
@@ -79,17 +103,21 @@ api.interceptors.response.use(
     }
 
     // Tratar outros erros
+    const details = (error.response?.data ?? {}) as ApiErrorPayload;
     const errorMessage =
-      (error.response?.data as any)?.message ||
+      details.message ||
       error.message ||
       "Erro ao processar requisição";
 
-    return Promise.reject(new Error(errorMessage));
+    return Promise.reject(
+      new ApiError(errorMessage, error.response?.status, details),
+    );
   }
 );
 
 // Função auxiliar para extrair mensagem de erro
 export function getErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) return error.message;
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError<{ message?: string }>;
     return (
@@ -102,4 +130,8 @@ export function getErrorMessage(error: unknown): string {
     return error.message;
   }
   return "Erro desconhecido";
+}
+
+export function getApiErrorCode(error: unknown): string | undefined {
+  return error instanceof ApiError ? error.code : undefined;
 }

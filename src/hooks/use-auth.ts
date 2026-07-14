@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { UserPermission, UserRole } from "@/types/admin";
 
 export interface User {
   id: string;
@@ -7,6 +8,10 @@ export interface User {
   fullName: string;
   businessName: string | null;
   phone: string | null;
+  role: UserRole;
+  isActive: boolean;
+  permissions: UserPermission[];
+  createdAt?: string;
 }
 
 export function useCurrentUser() {
@@ -29,4 +34,3 @@ export function useCurrentUserId() {
     data: user?.id,
   };
 }
-
