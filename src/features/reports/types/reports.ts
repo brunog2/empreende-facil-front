@@ -8,6 +8,8 @@ export interface ReportSummary {
   summary: {
     revenue: string;
     expenses: string;
+    costOfGoodsSold: string;
+    operatingResult: string;
     profit: string;
     salesCount: number;
     averageTicket: string;
@@ -24,6 +26,8 @@ export interface AdvancedReport {
     month: string;
     revenue: string;
     expenses: string;
+    costOfGoodsSold: string;
+    operatingResult: string;
     profit: string;
   }>;
   topProducts: Array<{ name: string; revenue: string; quantity: number }>;

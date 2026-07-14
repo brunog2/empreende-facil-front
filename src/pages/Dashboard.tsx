@@ -1,11 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  useSales,
-  useMonthlySalesTotal,
-  useTopProducts,
-} from "@/hooks/use-sales";
-import { useMonthlyExpensesTotal } from "@/hooks/use-expenses";
+import { useSales, useTopProducts } from "@/hooks/use-sales";
+import { useExpenses } from "@/hooks/use-expenses";
 import { useLowStockProducts, useProducts } from "@/hooks/use-products";
 import { useCategories } from "@/hooks/use-categories";
 import {
@@ -85,17 +81,10 @@ export default function Dashboard() {
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [productFilter, setProductFilter] = useState<string[]>([]);
 
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonthNumber = now.getMonth() + 1;
-
   const { data: sales = [], isLoading: salesLoading } = useSales();
+  const { data: expenses = [], isLoading: expensesLoading } = useExpenses();
   const { data: products = [] } = useProducts();
   const { data: categories = [] } = useCategories();
-  const { data: monthlySalesTotal = 0, isLoading: salesTotalLoading } =
-    useMonthlySalesTotal(currentYear, currentMonthNumber);
-  const { data: monthlyExpensesTotal = 0, isLoading: expensesTotalLoading } =
-    useMonthlyExpensesTotal(currentYear, currentMonthNumber);
   const { data: allTopProducts = [], isLoading: topProductsLoading } =
     useTopProducts(5);
 
@@ -106,7 +95,7 @@ export default function Dashboard() {
       return isoString;
     }
     // Extrai apenas a parte da data (YYYY-MM-DD) da string ISO
-    return isoString.split('T')[0];
+    return isoString.split("T")[0];
   };
 
   // Filtrar vendas baseado nos filtros
@@ -118,7 +107,9 @@ export default function Dashboard() {
       filtered = filtered.filter((sale) => {
         // Extrair apenas a data (YYYY-MM-DD) da string ISO, ignorando timezone
         const saleDateStr = extractDateOnly(sale.saleDate);
-        const [saleYear, saleMonth, saleDay] = saleDateStr.split("-").map(Number);
+        const [saleYear, saleMonth, saleDay] = saleDateStr
+          .split("-")
+          .map(Number);
         const saleDateOnly = new Date(saleYear, saleMonth - 1, saleDay);
 
         if (startDate) {
@@ -145,16 +136,16 @@ export default function Dashboard() {
     // Filtro de categoria (multi-select)
     if (categoryFilter.length > 0) {
       const hasSemCategoria = categoryFilter.includes("sem_categoria");
-        filtered = filtered.filter((sale) => {
-          return sale.saleItems.some((item) => {
-            const product = products.find((p) => p.id === item.productId);
+      filtered = filtered.filter((sale) => {
+        return sale.saleItems.some((item) => {
+          const product = products.find((p) => p.id === item.productId);
           if (!product) return false;
-          
+
           // Buscar o nome da categoria do produto
           const productCategoryName = product.category
             ? categories.find(
                 (cat) =>
-                  cat.id === product.category || cat.name === product.category
+                  cat.id === product.category || cat.name === product.category,
               )?.name || product.category
             : null;
 
@@ -162,21 +153,23 @@ export default function Dashboard() {
           if (!productCategoryName) {
             // Produto sem categoria
             return hasSemCategoria;
-      } else {
+          } else {
             // Produto com categoria - verificar se está na lista de filtros
             return categoryFilter.some((filterCat) => {
               if (filterCat === "sem_categoria") return false;
               return productCategoryName === filterCat;
             });
           }
-          });
         });
+      });
     }
 
     // Filtro de produto (multi-select)
     if (productFilter.length > 0) {
       filtered = filtered.filter((sale) => {
-        return sale.saleItems.some((item) => productFilter.includes(item.productId));
+        return sale.saleItems.some((item) =>
+          productFilter.includes(item.productId),
+        );
       });
     }
 
@@ -230,41 +223,41 @@ export default function Dashboard() {
     useLowStockProducts();
 
   const isLoading =
-    salesLoading ||
-    salesTotalLoading ||
-    expensesTotalLoading ||
-    topProductsLoading ||
-    lowStockLoading;
+    salesLoading || expensesLoading || topProductsLoading || lowStockLoading;
 
   // Calcular totais baseados nos filtros
   const filteredSalesTotal = useMemo(() => {
     return filteredSales.reduce(
       (sum, sale) => sum + Number(sale.totalAmount),
-      0
+      0,
     );
   }, [filteredSales]);
 
   const filteredExpensesTotal = useMemo(() => {
-    // Filtrar despesas pelo período
-    // Nota: despesas não têm filtro de categoria/produto, apenas período
-    return monthlyExpensesTotal; // Por enquanto mantém o total do mês, pode ser melhorado depois
-  }, [monthlyExpensesTotal, startDate, endDate]);
+    return expenses
+      .filter((expense) => {
+        const expenseDate = extractDateOnly(expense.expenseDate);
+        if (startDate && expenseDate < startDate) return false;
+        if (endDate && expenseDate > endDate) return false;
+        return true;
+      })
+      .reduce((sum, expense) => sum + Number(expense.amount), 0);
+  }, [expenses, startDate, endDate]);
 
-  // Calcular lucro real (vendas - despesas - custo dos produtos vendidos)
-  const productCosts = useMemo(() => {
+  // O custo gravado no item preserva o CMV mesmo que o produto seja alterado depois.
+  const costOfGoodsSold = useMemo(() => {
     return filteredSales.reduce((sum, sale) => {
       return (
         sum +
         sale.saleItems.reduce((itemSum, item) => {
-          const product = products.find((p) => p.id === item.productId);
-          const cost = product?.costPrice || 0;
-          return itemSum + cost * item.quantity;
+          return itemSum + Number(item.productCostPrice) * item.quantity;
         }, 0)
       );
     }, 0);
-  }, [filteredSales, products]);
+  }, [filteredSales]);
 
-  const profit = filteredSalesTotal - filteredExpensesTotal - productCosts;
+  const operatingResult =
+    filteredSalesTotal - filteredExpensesTotal - costOfGoodsSold;
   const recentSales = filteredSales.slice(0, 5);
 
   const clearFilters = () => {
@@ -291,19 +284,21 @@ export default function Dashboard() {
         const daySales = filteredSales.filter((sale) => {
           // Extrair apenas a data (YYYY-MM-DD) da string ISO, ignorando timezone
           const saleDateStr = extractDateOnly(sale.saleDate);
-          const [saleYear, saleMonth, saleDay] = saleDateStr.split("-").map(Number);
+          const [saleYear, saleMonth, saleDay] = saleDateStr
+            .split("-")
+            .map(Number);
           const saleDateOnly = new Date(saleYear, saleMonth - 1, saleDay);
-          
+
           const dateOnly = new Date(
             date.getFullYear(),
             date.getMonth(),
-            date.getDate()
+            date.getDate(),
           );
           return saleDateOnly.getTime() === dateOnly.getTime();
         });
         const total = daySales.reduce(
           (sum, sale) => sum + Number(sale.totalAmount),
-          0
+          0,
         );
         return {
           date: format(date, "dd/MM"),
@@ -320,7 +315,9 @@ export default function Dashboard() {
     // Parse da data no formato YYYY-MM-DD como horário local (mesmo método usado no filtro)
     let start: Date;
     if (startDate) {
-      const [startYear, startMonth, startDay] = startDate.split("-").map(Number);
+      const [startYear, startMonth, startDay] = startDate
+        .split("-")
+        .map(Number);
       start = new Date(startYear, startMonth - 1, startDay);
     } else {
       start = new Date();
@@ -347,19 +344,21 @@ export default function Dashboard() {
       const daySales = filteredSales.filter((sale) => {
         // Extrair apenas a data (YYYY-MM-DD) da string ISO, ignorando timezone
         const saleDateStr = extractDateOnly(sale.saleDate);
-        const [saleYear, saleMonth, saleDay] = saleDateStr.split("-").map(Number);
+        const [saleYear, saleMonth, saleDay] = saleDateStr
+          .split("-")
+          .map(Number);
         const saleDateOnly = new Date(saleYear, saleMonth - 1, saleDay);
-        
+
         const dateOnly = new Date(
           date.getFullYear(),
           date.getMonth(),
-          date.getDate()
+          date.getDate(),
         );
         return saleDateOnly.getTime() === dateOnly.getTime();
       });
       const total = daySales.reduce(
         (sum, sale) => sum + Number(sale.totalAmount),
-        0
+        0,
       );
       return {
         date: format(date, "dd/MM"),
@@ -376,16 +375,26 @@ export default function Dashboard() {
   const chartTitle = useMemo(() => {
     if (startDate && endDate) {
       // Parse da data no formato YYYY-MM-DD como horário local (mesmo método usado no filtro)
-      const [startYear, startMonth, startDay] = startDate.split("-").map(Number);
-      const start = format(new Date(startYear, startMonth - 1, startDay), "dd/MM/yyyy");
-      
+      const [startYear, startMonth, startDay] = startDate
+        .split("-")
+        .map(Number);
+      const start = format(
+        new Date(startYear, startMonth - 1, startDay),
+        "dd/MM/yyyy",
+      );
+
       const [endYear, endMonth, endDay] = endDate.split("-").map(Number);
       const end = format(new Date(endYear, endMonth - 1, endDay), "dd/MM/yyyy");
-      
+
       return `Vendas de ${start} a ${end}`;
     } else if (startDate) {
-      const [startYear, startMonth, startDay] = startDate.split("-").map(Number);
-      const start = format(new Date(startYear, startMonth - 1, startDay), "dd/MM/yyyy");
+      const [startYear, startMonth, startDay] = startDate
+        .split("-")
+        .map(Number);
+      const start = format(
+        new Date(startYear, startMonth - 1, startDay),
+        "dd/MM/yyyy",
+      );
       return `Vendas a partir de ${start}`;
     } else if (endDate) {
       const [endYear, endMonth, endDay] = endDate.split("-").map(Number);
@@ -406,7 +415,8 @@ export default function Dashboard() {
         let categoryName = "Sem categoria";
         if (product?.category) {
           const category = categories.find(
-            (cat) => cat.id === product.category || cat.name === product.category
+            (cat) =>
+              cat.id === product.category || cat.name === product.category,
           );
           categoryName = category?.name || product.category;
         }
@@ -558,8 +568,8 @@ export default function Dashboard() {
                     value={productFilter}
                     onChange={(value) => setProductFilter(value)}
                     options={products.map((prod) => ({
-                        value: prod.id,
-                        label: prod.name,
+                      value: prod.id,
+                      label: prod.name,
                     }))}
                     placeholder="Selecione produtos..."
                     searchPlaceholder="Buscar produto..."
@@ -571,11 +581,11 @@ export default function Dashboard() {
           </Card>
         )}
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           <Card className="transition-shadow hover:shadow-lg border-green-200 bg-green-50/50 dark:bg-green-950/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
-                Faturamento do Mês
+                Faturamento do período
               </CardTitle>
               <TrendingUp className="h-5 w-5 text-green-600" />
             </CardHeader>
@@ -596,7 +606,7 @@ export default function Dashboard() {
           <Card className="transition-shadow hover:shadow-lg border-red-200 bg-red-50/50 dark:bg-red-950/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
-                Despesas do Mês
+                Despesas do período
               </CardTitle>
               <TrendingDown className="h-5 w-5 text-red-600" />
             </CardHeader>
@@ -616,22 +626,42 @@ export default function Dashboard() {
 
           <Card className="transition-shadow hover:shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Lucro</CardTitle>
+              <CardTitle className="text-sm font-medium">CMV</CardTitle>
+              <Package className="h-5 w-5 text-amber-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-amber-600">
+                {new Intl.NumberFormat("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                }).format(costOfGoodsSold)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Custo histórico dos itens vendidos
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="transition-shadow hover:shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">
+                Resultado operacional estimado
+              </CardTitle>
               <ShoppingCart className="h-5 w-5 text-primary" />
             </CardHeader>
             <CardContent>
               <div
                 className={`text-2xl font-bold ${
-                  profit >= 0 ? "text-green-600" : "text-destructive"
+                  operatingResult >= 0 ? "text-green-600" : "text-destructive"
                 }`}
               >
                 {new Intl.NumberFormat("pt-BR", {
                   style: "currency",
                   currency: "BRL",
-                }).format(profit)}
+                }).format(operatingResult)}
               </div>
               <p className="text-xs text-muted-foreground">
-                Receitas - Despesas - Custo dos Produtos
+                Faturamento - Despesas - CMV
               </p>
             </CardContent>
           </Card>
@@ -794,31 +824,44 @@ export default function Dashboard() {
                       {recentSales.map((sale) => {
                         // Extrair apenas a data (YYYY-MM-DD) da string ISO, ignorando timezone
                         const saleDateStr = extractDateOnly(sale.saleDate);
-                        const [saleYear, saleMonth, saleDay] = saleDateStr.split("-").map(Number);
-                        const saleDate = new Date(saleYear, saleMonth - 1, saleDay);
-                        
+                        const [saleYear, saleMonth, saleDay] = saleDateStr
+                          .split("-")
+                          .map(Number);
+                        const saleDate = new Date(
+                          saleYear,
+                          saleMonth - 1,
+                          saleDay,
+                        );
+
                         // Tentar extrair hora da string original se disponível
-                        const timeMatch = sale.saleDate.match(/T(\d{2}):(\d{2})(?::(\d{2}))?/);
+                        const timeMatch = sale.saleDate.match(
+                          /T(\d{2}):(\d{2})(?::(\d{2}))?/,
+                        );
                         if (timeMatch) {
-                          saleDate.setHours(parseInt(timeMatch[1]), parseInt(timeMatch[2]), timeMatch[3] ? parseInt(timeMatch[3]) : 0);
+                          saleDate.setHours(
+                            parseInt(timeMatch[1]),
+                            parseInt(timeMatch[2]),
+                            timeMatch[3] ? parseInt(timeMatch[3]) : 0,
+                          );
                         }
-                        
+
                         return (
-                        <TableRow key={sale.id}>
-                          <TableCell>
-                            {format(saleDate, "dd/MM/yyyy HH:mm")}
-                          </TableCell>
-                          <TableCell>
-                            {sale.customer?.name || "Cliente não informado"}
-                          </TableCell>
-                          <TableCell className="text-right font-medium">
-                            {new Intl.NumberFormat("pt-BR", {
-                              style: "currency",
-                              currency: "BRL",
-                            }).format(sale.totalAmount)}
-                          </TableCell>
-                        </TableRow>
-                      )})}
+                          <TableRow key={sale.id}>
+                            <TableCell>
+                              {format(saleDate, "dd/MM/yyyy HH:mm")}
+                            </TableCell>
+                            <TableCell>
+                              {sale.customer?.name || "Cliente não informado"}
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
+                              {new Intl.NumberFormat("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              }).format(sale.totalAmount)}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>
@@ -888,7 +931,7 @@ export default function Dashboard() {
                             (category.value /
                               topCategories.reduce(
                                 (sum, c) => sum + c.value,
-                                0
+                                0,
                               )) *
                             100
                           ).toFixed(0)}
@@ -926,7 +969,8 @@ export default function Dashboard() {
                         <div>
                           <p className="font-medium">{product.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            Estoque: {product.stockQuantity.toLocaleString('pt-BR', {
+                            Estoque:{" "}
+                            {product.stockQuantity.toLocaleString("pt-BR", {
                               minimumFractionDigits: 0,
                               maximumFractionDigits: 3,
                             })}

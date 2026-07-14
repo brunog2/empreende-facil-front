@@ -66,7 +66,7 @@ const extractDateOnly = (isoString: string): string => {
 // Helper para formatar data de venda corretamente, ignorando problemas de timezone
 const formatSaleDate = (
   isoString: string,
-  formatStr: string = "dd/MM/yyyy HH:mm"
+  formatStr: string = "dd/MM/yyyy HH:mm",
 ): string => {
   // Extrair apenas a data (YYYY-MM-DD) da string ISO
   const dateStr = extractDateOnly(isoString);
@@ -82,7 +82,7 @@ const formatSaleDate = (
       date.setHours(
         parseInt(timeMatch[1]),
         parseInt(timeMatch[2]),
-        timeMatch[3] ? parseInt(timeMatch[3]) : 0
+        timeMatch[3] ? parseInt(timeMatch[3]) : 0,
       );
     }
   }
@@ -138,7 +138,7 @@ export default function Sales() {
 
   // Estado local para valores temporários dos inputs de quantidade
   const [quantityInputs, setQuantityInputs] = useState<Record<number, string>>(
-    {}
+    {},
   );
 
   // Sincronizar valores do form com o estado local quando o dialog abre ou campos são adicionados
@@ -289,7 +289,7 @@ export default function Sales() {
                   {fields.map((field, index) => {
                     const item = form.watch(`items.${index}`);
                     const product = products.find(
-                      (p) => p.id === item?.productId
+                      (p) => p.id === item?.productId,
                     );
                     const isOutOfStock = product && product.stockQuantity <= 0;
                     const unitPrice =
@@ -341,7 +341,7 @@ export default function Sales() {
                                   form.setValue(
                                     `items.${index}.quantity` as `items.${number}.quantity`,
                                     numValue,
-                                    { shouldValidate: true }
+                                    { shouldValidate: true },
                                   );
                                 }
                               }
@@ -359,7 +359,7 @@ export default function Sales() {
                               form.setValue(
                                 `items.${index}.quantity` as `items.${number}.quantity`,
                                 finalValue,
-                                { shouldValidate: true }
+                                { shouldValidate: true },
                               );
                               setQuantityInputs((prev) => ({
                                 ...prev,
@@ -389,7 +389,7 @@ export default function Sales() {
                               form.setValue(
                                 `items.${index}.unitPrice`,
                                 value || 0,
-                                { shouldValidate: true }
+                                { shouldValidate: true },
                               );
                             }}
                             error={
@@ -588,18 +588,18 @@ export default function Sales() {
                     <TableHead>Produtos</TableHead>
                     <TableHead>Pagamento</TableHead>
                     <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="text-right">Lucro</TableHead>
+                    <TableHead className="text-right">Margem bruta</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {sales.map((sale) => {
-                    const profit = sale.saleItems.reduce((sum, item) => {
-                      const product = products.find(
-                        (p) => p.id === item.productId
+                    const grossMargin = sale.saleItems.reduce((sum, item) => {
+                      return (
+                        sum +
+                        (item.unitPrice - Number(item.productCostPrice)) *
+                          item.quantity
                       );
-                      const cost = product?.costPrice || 0;
-                      return sum + (item.unitPrice - cost) * item.quantity;
                     }, 0);
 
                     return (
@@ -658,13 +658,15 @@ export default function Sales() {
                         </TableCell>
                         <TableCell
                           className={`text-right font-medium ${
-                            profit >= 0 ? "text-success" : "text-destructive"
+                            grossMargin >= 0
+                              ? "text-success"
+                              : "text-destructive"
                           }`}
                         >
                           {new Intl.NumberFormat("pt-BR", {
                             style: "currency",
                             currency: "BRL",
-                          }).format(profit)}
+                          }).format(grossMargin)}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
@@ -717,7 +719,7 @@ export default function Sales() {
                   size="sm"
                   onClick={() =>
                     setCurrentPage((prev) =>
-                      Math.min(paginationMeta.totalPages, prev + 1)
+                      Math.min(paginationMeta.totalPages, prev + 1),
                     )
                   }
                   disabled={currentPage === paginationMeta.totalPages}

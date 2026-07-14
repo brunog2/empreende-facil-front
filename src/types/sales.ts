@@ -9,6 +9,7 @@ export interface SaleItem {
   subtotal: number;
   productName: string | null;
   productPrice: number | null;
+  productCostPrice: number;
   product?: {
     id: string;
     name: string;
@@ -66,4 +67,3 @@ export interface SaleFilters {
 }
 
 export type SalesResponse = Sale[] | PaginatedResponse<Sale>;
-
