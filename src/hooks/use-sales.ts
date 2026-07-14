@@ -88,6 +88,7 @@ export function useCreateSale() {
       queryClient.invalidateQueries({ queryKey: ["sales"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["subscriptions", "usage"] });
       toast.success("Venda realizada com sucesso!");
     },
     onError: (error: Error) => {
@@ -111,6 +112,7 @@ export function useUpdateSale() {
       queryClient.invalidateQueries({ queryKey: ["sale", variables.id] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["subscriptions", "usage"] });
       toast.success("Venda atualizada com sucesso!");
     },
     onError: (error: Error) => {
@@ -132,6 +134,7 @@ export function useDeleteSale() {
       queryClient.invalidateQueries({ queryKey: ["sales"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["subscriptions", "usage"] });
       toast.success("Venda excluída com sucesso!");
     },
     onError: (error: Error) => {
@@ -153,6 +156,7 @@ export function useBulkDeleteSales() {
       queryClient.invalidateQueries({ queryKey: ["sales"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["subscriptions", "usage"] });
       toast.success(`${ids.length} venda(s) excluída(s) com sucesso!`);
     },
     onError: (error: Error) => {

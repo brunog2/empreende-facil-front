@@ -26,7 +26,13 @@ export const useMySubscription = (enabled = true) =>
   });
 
 export const useSubscriptionUsage = (enabled = true) =>
-  useQuery({ queryKey: subscriptionKeys.usage, queryFn: subscriptionsApi.usage, enabled });
+  useQuery({
+    queryKey: subscriptionKeys.usage,
+    queryFn: subscriptionsApi.usage,
+    enabled,
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
+  });
 
 export const useSubscriptionPayments = (enabled = true) =>
   useQuery({ queryKey: subscriptionKeys.payments, queryFn: subscriptionsApi.payments, enabled });

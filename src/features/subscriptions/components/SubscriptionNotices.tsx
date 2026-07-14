@@ -16,6 +16,14 @@ export function SubscriptionNotices() {
       icon: Clock3,
     });
   }
+  const promotionalDays = daysUntil(subscription.planAccessEndsAt);
+  if (promotionalDays !== null && [7, 3, 1].includes(promotionalDays)) {
+    notices.push({
+      title: "Sua condição Fundador está terminando",
+      description: `O acesso promocional do plano Fundador termina em ${promotionalDays} ${promotionalDays === 1 ? "dia" : "dias"}. Escolha o próximo plano para não interromper a operação.`,
+      icon: Clock3,
+    });
+  }
   if (subscription.status === "past_due") {
     notices.push({
       title: "Pagamento atrasado",

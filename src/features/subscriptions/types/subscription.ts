@@ -9,11 +9,10 @@ export type PlanFeature =
   | "advancedReports"
   | "dataExport"
   | "automaticBackup"
-  | "userPermissions"
   | "prioritySupport"
   | "premiumSupport";
 
-export type PlanLimit = "products" | "customers" | "salesPerMonth" | "users";
+export type PlanLimit = "products" | "customers" | "salesPerMonth";
 export type PlanFeatures = Record<PlanFeature, boolean>;
 export type PlanLimits = Record<PlanLimit, number | null>;
 export type SubscriptionStatus =
@@ -40,6 +39,7 @@ export interface Plan {
   monthlyPrice: string;
   yearlyPrice: string;
   trialDays: number | null;
+  durationMonths: number | null;
   features: PlanFeatures;
   limits: PlanLimits;
   isActive: boolean;
@@ -59,6 +59,7 @@ export interface Subscription {
   gracePeriodEndsAt: string | null;
   canceledAt: string | null;
   cancelAtPeriodEnd: boolean;
+  planAccessEndsAt: string | null;
   lockedMonthlyPrice: string | null;
   lockedYearlyPrice: string | null;
   createdAt: string;

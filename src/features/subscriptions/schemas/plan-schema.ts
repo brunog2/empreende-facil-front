@@ -8,6 +8,7 @@ export const planFormSchema = z.object({
   description: z.string().min(10).max(1000),
   monthlyPrice: money,
   yearlyPrice: money,
+  durationMonths: z.number().int().min(1).max(120).nullable(),
   isActive: z.boolean(),
   isRecommended: z.boolean(),
 });

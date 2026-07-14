@@ -22,15 +22,15 @@ import {
 
 const planOrder: Record<string, number> = {
   trial: 0,
-  starter: 1,
-  pro: 2,
-  business: 3,
-  founder: 4,
+  founder: 1,
+  starter: 2,
+  pro: 3,
+  business: 4,
 };
 
 function planButtonLabel(plan: Plan): string {
   if (plan.code === "trial") return "Começar teste de 14 dias";
-  if (plan.code === "founder") return "Garantir preço fundador";
+  if (plan.code === "founder") return "Assinar plano Fundador";
   return `Assinar ${plan.name}`;
 }
 
@@ -166,7 +166,7 @@ export default function PlansPage() {
                           <span className="text-muted-foreground">/mês</span>
                           {isFounder && (
                             <p className="mt-1 text-sm font-semibold text-amber-700">
-                              Este preço fica garantido para sempre
+                              Condição promocional válida por {plan.durationMonths ?? 3} meses
                             </p>
                           )}
                         </>
@@ -197,11 +197,6 @@ export default function PlansPage() {
                         {plan.limits.salesPerMonth === null
                           ? "Vendas ilimitadas"
                           : `Até ${plan.limits.salesPerMonth.toLocaleString("pt-BR")} vendas/mês`}
-                      </p>
-                      <p>
-                        {plan.limits.users === null
-                          ? "Usuários ilimitados"
-                          : `${plan.limits.users} ${plan.limits.users === 1 ? "usuário" : "usuários"}`}
                       </p>
                     </div>
                   </CardContent>

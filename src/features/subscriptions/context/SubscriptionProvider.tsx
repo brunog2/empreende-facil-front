@@ -40,7 +40,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       isError: subscriptionQuery.isError || usageQuery.isError,
       canAccessFeature: (feature) => Boolean(subscription?.plan.features[feature]),
       hasReachedLimit: (limit) => {
-        if (limit === "users") return false;
         const item = usage?.[limit];
         return Boolean(item && item.limit !== null && item.current >= item.limit);
       },

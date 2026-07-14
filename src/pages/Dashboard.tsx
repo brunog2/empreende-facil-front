@@ -648,7 +648,7 @@ export default function Dashboard() {
                 {lowStockProducts.length}
               </div>
               <p className="text-xs text-muted-foreground">
-                Produtos sem estoque
+                Produtos com estoque baixo
               </p>
             </CardContent>
           </Card>
@@ -966,8 +966,8 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
-                Você tem {lowStockProducts.length} produto(s) com estoque abaixo
-                do mínimo.
+                Você tem {lowStockProducts.length} produto(s) com 5 unidades ou
+                menos em estoque.
               </p>
               <Button
                 variant="outline"

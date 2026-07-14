@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LayoutDashboard, Package, ShoppingCart, Receipt, Users, LogOut, Tags, User, BookOpen, CreditCard } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Receipt, Users, LogOut, Tags, User, BookOpen, CreditCard, BarChart3 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -45,6 +45,7 @@ const menuItems: Array<{
   { title: "Categorias", url: "/categorias", icon: Tags, permission: "categories", feature: "categories" },
   { title: "Clientes", url: "/clientes", icon: Users, permission: "customers", feature: "customers" },
   { title: "Despesas", url: "/despesas", icon: Receipt, permission: "expenses", feature: "expenses" },
+  { title: "Relatórios", url: "/relatorios", icon: BarChart3, permission: "reports", feature: "reports" },
   { title: "Assinatura", url: "/assinatura", icon: CreditCard },
   { title: "Documentação", url: "/documentacao", icon: BookOpen },
   { title: "Meu Perfil", url: "/perfil", icon: User },

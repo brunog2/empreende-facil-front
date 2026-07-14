@@ -16,7 +16,6 @@ export const featureLabels: Record<PlanFeature, string> = {
   advancedReports: "Relatórios avançados",
   dataExport: "Exportação Excel/PDF",
   automaticBackup: "Backup automático",
-  userPermissions: "Permissões por usuário",
   prioritySupport: "Suporte prioritário",
   premiumSupport: "Suporte premium",
 };
@@ -32,7 +31,6 @@ export const featureOrder: PlanFeature[] = [
   "advancedReports",
   "dataExport",
   "automaticBackup",
-  "userPermissions",
   "prioritySupport",
   "premiumSupport",
 ];
@@ -93,6 +91,12 @@ export function daysUntil(value: string | null): number | null {
 export function isSubscriptionBlocked(subscription?: Subscription): boolean {
   if (!subscription) return true;
   const now = Date.now();
+  if (
+    subscription.planAccessEndsAt &&
+    new Date(subscription.planAccessEndsAt).getTime() <= now
+  ) {
+    return true;
+  }
   if (subscription.status === "trialing") {
     return !subscription.trialEndsAt || new Date(subscription.trialEndsAt).getTime() <= now;
   }

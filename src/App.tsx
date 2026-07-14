@@ -39,6 +39,8 @@ import { SubscriptionProvider } from "./features/subscriptions/context/Subscript
 import { SubscriptionRequired } from "./features/subscriptions/components/SubscriptionRequired";
 import { FeatureRequired } from "./features/subscriptions/components/FeatureRequired";
 import { SubscriptionNotices } from "./features/subscriptions/components/SubscriptionNotices";
+import { PlanLimitWarningDialog } from "./features/subscriptions/components/PlanLimitWarningDialog";
+import ReportsPage from "./features/reports/pages/ReportsPage";
 import { PlanFeature } from "./features/subscriptions/types/subscription";
 import { UserPermission } from "./types/admin";
 
@@ -144,6 +146,7 @@ const App = () => (
                       </header>
                       <main className="min-w-0 flex-1 overflow-auto">
                         <SubscriptionNotices />
+                        <PlanLimitWarningDialog />
                         <Routes>
                           <Route path="/" element={<BusinessRoute permission="dashboard" feature="dashboard"><Dashboard /></BusinessRoute>} />
                           <Route
@@ -191,6 +194,14 @@ const App = () => (
                             element={
                               <BusinessRoute permission="categories" feature="categories">
                                 <Categories />
+                              </BusinessRoute>
+                            }
+                          />
+                          <Route
+                            path="/relatorios"
+                            element={
+                              <BusinessRoute permission="reports" feature="reports">
+                                <ReportsPage />
                               </BusinessRoute>
                             }
                           />

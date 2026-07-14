@@ -76,6 +76,7 @@ export function useCreateCustomer() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["customers"] });
+      queryClient.invalidateQueries({ queryKey: ["subscriptions", "usage"] });
       toast.success("Cliente criado com sucesso!");
     },
     onError: (error: Error) => {
@@ -96,6 +97,7 @@ export function useUpdateCustomer() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["customers"] });
+      queryClient.invalidateQueries({ queryKey: ["subscriptions", "usage"] });
       queryClient.invalidateQueries({ queryKey: ["customer", variables.id] });
       toast.success("Cliente atualizado com sucesso!");
     },
@@ -116,6 +118,7 @@ export function useDeleteCustomer() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["customers"] });
+      queryClient.invalidateQueries({ queryKey: ["subscriptions", "usage"] });
       toast.success("Cliente excluído com sucesso!");
     },
     onError: (error: Error) => {
@@ -135,6 +138,7 @@ export function useBulkDeleteCustomers() {
     },
     onSuccess: (_, ids) => {
       queryClient.invalidateQueries({ queryKey: ["customers"] });
+      queryClient.invalidateQueries({ queryKey: ["subscriptions", "usage"] });
       toast.success(`${ids.length} cliente(s) excluído(s) com sucesso!`);
     },
     onError: (error: Error) => {

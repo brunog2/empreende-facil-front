@@ -44,7 +44,7 @@ export default function SubscriptionPage() {
         <div className="h-1.5 bg-primary" />
         <CardHeader className="md:flex-row md:items-start md:justify-between">
           <div><div className="mb-3 flex items-center gap-3"><CardTitle className="text-2xl">{plan.name}</CardTitle><SubscriptionStatusBadge status={subscription.status} /></div><CardDescription>{plan.description}</CardDescription></div>
-          <div className="mt-4 text-left md:mt-0 md:text-right"><p className="text-2xl font-bold">{formatMoney(currentPrice)}</p><p className="text-sm text-muted-foreground">ciclo {subscription.billingCycle === "yearly" ? "anual" : "mensal"}</p>{subscription.lockedMonthlyPrice && <p className="mt-1 text-xs font-medium text-amber-700">Preço fundador garantido</p>}</div>
+          <div className="mt-4 text-left md:mt-0 md:text-right"><p className="text-2xl font-bold">{formatMoney(currentPrice)}</p><p className="text-sm text-muted-foreground">ciclo {subscription.billingCycle === "yearly" ? "anual" : "mensal"}</p>{subscription.planAccessEndsAt && <p className="mt-1 text-xs font-medium text-amber-700">Condição Fundador até {formatDate(subscription.planAccessEndsAt)}</p>}</div>
         </CardHeader>
         <CardContent className="grid gap-4 border-t bg-muted/30 pt-6 sm:grid-cols-3">
           <div><p className="text-xs uppercase tracking-wide text-muted-foreground">Situação</p><p className="mt-1 font-medium">{statusLabels[subscription.status]}</p></div>
