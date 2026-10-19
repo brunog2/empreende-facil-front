@@ -84,6 +84,7 @@ export function useCreateProduct() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["subscriptions", "usage"] });
       toast.success("Produto criado com sucesso!");
     },
     onError: (error: Error) => {
@@ -104,6 +105,7 @@ export function useUpdateProduct() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["subscriptions", "usage"] });
       queryClient.invalidateQueries({ queryKey: ["product", variables.id] });
       toast.success("Produto atualizado com sucesso!");
     },
@@ -124,6 +126,7 @@ export function useDeleteProduct() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["subscriptions", "usage"] });
       toast.success("Produto excluído com sucesso!");
     },
     onError: (error: Error) => {
@@ -143,6 +146,7 @@ export function useBulkDeleteProducts() {
     },
     onSuccess: (_, ids) => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["subscriptions", "usage"] });
       toast.success(`${ids.length} produto(s) excluído(s) com sucesso!`);
     },
     onError: (error: Error) => {

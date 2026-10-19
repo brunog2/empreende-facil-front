@@ -11,6 +11,8 @@ node_modules
 dist
 dist-ssr
 *.local
+*.tsbuildinfo
+vite.config.ts.timestamp-*.mjs
 
 # Environment variables
 .env

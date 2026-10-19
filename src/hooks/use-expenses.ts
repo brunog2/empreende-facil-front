@@ -20,7 +20,7 @@ export interface CreateExpenseDto {
   description: string;
   amount: number;
   category: string;
-  expenseDate?: Date;
+  expenseDate?: string;
   isRecurring?: boolean;
   recurrencePeriod?: string | null;
 }
@@ -29,7 +29,7 @@ export interface UpdateExpenseDto {
   description?: string;
   amount?: number;
   category?: string;
-  expenseDate?: Date;
+  expenseDate?: string;
   isRecurring?: boolean;
   recurrencePeriod?: string | null;
 }

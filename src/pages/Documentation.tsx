@@ -1,12 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  LayoutDashboard, 
-  ShoppingCart, 
-  Package, 
-  Tags, 
-  Users, 
+import {
+  LayoutDashboard,
+  ShoppingCart,
+  Package,
+  Tags,
+  Users,
   Receipt,
   BookOpen,
   CheckCircle2,
@@ -14,7 +14,7 @@ import {
   TrendingUp,
   Filter,
   Shield,
-  Navigation
+  Navigation,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -41,7 +41,9 @@ export default function Documentation() {
           <ScrollArea className="h-[calc(100vh-8rem)]">
             <nav className="space-y-2">
               <Button
-                variant={activeSection === "visao-geral" ? "secondary" : "ghost"}
+                variant={
+                  activeSection === "visao-geral" ? "secondary" : "ghost"
+                }
                 className="w-full justify-start"
                 onClick={() => scrollToSection("visao-geral")}
               >
@@ -55,7 +57,9 @@ export default function Documentation() {
                 Módulos Principais
               </Button>
               <Button
-                variant={activeSection === "funcionalidades" ? "secondary" : "ghost"}
+                variant={
+                  activeSection === "funcionalidades" ? "secondary" : "ghost"
+                }
                 className="w-full justify-start"
                 onClick={() => scrollToSection("funcionalidades")}
               >
@@ -85,10 +89,14 @@ export default function Documentation() {
         <div className="space-y-8">
           {/* Cabeçalho */}
           <div className="space-y-2">
-            <h1 className="font-display text-4xl font-bold">Documentação da Plataforma</h1>
-            <p className="text-xl text-muted-foreground">Gestão Pro - Guia Completo de Uso</p>
+            <h1 className="font-display text-4xl font-bold">
+              Documentação da Plataforma
+            </h1>
+            <p className="text-xl text-muted-foreground">
+              Gestão Pro - Guia Completo de Uso
+            </p>
             <p className="text-sm text-muted-foreground">
-              Última atualização: {new Date().toLocaleDateString('pt-BR')}
+              Última atualização: {new Date().toLocaleDateString("pt-BR")}
             </p>
           </div>
 
@@ -103,12 +111,14 @@ export default function Documentation() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-muted-foreground">
-                  A <strong>Gestão Pro</strong> é uma plataforma completa para gerenciamento de negócios, 
-                  permitindo controle de produtos, vendas, despesas, clientes e categorias em um único lugar.
+                  A <strong>Gestão Pro</strong> é uma plataforma completa para
+                  gerenciamento de negócios, permitindo controle de produtos,
+                  vendas, despesas, clientes e categorias em um único lugar.
                 </p>
                 <p className="text-muted-foreground">
-                  Com uma interface intuitiva e funcionalidades poderosas, você pode gerenciar todos os 
-                  aspectos do seu negócio de forma eficiente e organizada.
+                  Com uma interface intuitiva e funcionalidades poderosas, você
+                  pode gerenciar todos os aspectos do seu negócio de forma
+                  eficiente e organizada.
                 </p>
               </CardContent>
             </Card>
@@ -117,7 +127,7 @@ export default function Documentation() {
           {/* Módulos Principais */}
           <section id="modulos" className="scroll-mt-6">
             <h2 className="text-3xl font-bold mb-6">Módulos Principais</h2>
-            
+
             <div className="space-y-6">
               {/* Dashboard */}
               <Card>
@@ -132,14 +142,41 @@ export default function Documentation() {
                     O painel principal oferece uma visão geral do seu negócio:
                   </p>
                   <ul className="list-disc list-inside space-y-2 text-muted-foreground ml-4">
-                    <li><strong>Faturamento do Mês</strong>: Total de vendas realizadas no mês atual</li>
-                    <li><strong>Despesas do Mês</strong>: Total de gastos no período</li>
-                    <li><strong>Lucro</strong>: Diferença entre receitas e despesas</li>
-                    <li><strong>Alertas de Estoque</strong>: Produtos com estoque abaixo do mínimo</li>
-                    <li><strong>Gráficos</strong>: Visualização de vendas dos últimos 7 dias</li>
-                    <li><strong>Produtos Mais Vendidos</strong>: Top 5 produtos por receita</li>
-                    <li><strong>Últimas Vendas</strong>: As 5 vendas mais recentes</li>
-                    <li><strong>Ação Rápida</strong>: Botão para criar nova venda diretamente</li>
+                    <li>
+                      <strong>Faturamento do Mês</strong>: Total de vendas
+                      realizadas no mês atual
+                    </li>
+                    <li>
+                      <strong>Despesas do Mês</strong>: Total de gastos no
+                      período
+                    </li>
+                    <li>
+                      <strong>CMV</strong>: Custo histórico dos produtos
+                      efetivamente vendidos
+                    </li>
+                    <li>
+                      <strong>Resultado operacional estimado</strong>:
+                      Faturamento menos despesas e CMV
+                    </li>
+                    <li>
+                      <strong>Alertas de Estoque</strong>: Produtos com estoque
+                      abaixo do mínimo
+                    </li>
+                    <li>
+                      <strong>Gráficos</strong>: Visualização de vendas dos
+                      últimos 7 dias
+                    </li>
+                    <li>
+                      <strong>Produtos Mais Vendidos</strong>: Top 5 produtos
+                      por receita
+                    </li>
+                    <li>
+                      <strong>Últimas Vendas</strong>: As 5 vendas mais recentes
+                    </li>
+                    <li>
+                      <strong>Ação Rápida</strong>: Botão para criar nova venda
+                      diretamente
+                    </li>
                   </ul>
                 </CardContent>
               </Card>
@@ -157,17 +194,34 @@ export default function Documentation() {
                     Módulo completo para gerenciamento de vendas:
                   </p>
                   <ul className="list-disc list-inside space-y-2 text-muted-foreground ml-4">
-                    <li><strong>Criar Venda</strong>: Registre novas vendas com múltiplos produtos</li>
-                    <li><strong>Editar Venda</strong>: Atualize informações de vendas existentes</li>
-                    <li><strong>Excluir Venda</strong>: Remova vendas (o estoque será restaurado automaticamente)</li>
-                    <li><strong>Cadastro Rápido de Cliente</strong>: Crie clientes diretamente durante a venda</li>
-                    <li><strong>Histórico Completo</strong>: Visualize todas as vendas realizadas</li>
+                    <li>
+                      <strong>Criar Venda</strong>: Registre novas vendas com
+                      múltiplos produtos
+                    </li>
+                    <li>
+                      <strong>Editar Venda</strong>: Atualize informações de
+                      vendas existentes
+                    </li>
+                    <li>
+                      <strong>Excluir Venda</strong>: Remova vendas (o estoque
+                      será restaurado automaticamente)
+                    </li>
+                    <li>
+                      <strong>Cadastro Rápido de Cliente</strong>: Crie clientes
+                      diretamente durante a venda
+                    </li>
+                    <li>
+                      <strong>Histórico Completo</strong>: Visualize todas as
+                      vendas realizadas
+                    </li>
                   </ul>
                   <div className="mt-4 p-4 bg-muted rounded-lg">
                     <p className="font-semibold mb-2">Como criar uma venda:</p>
                     <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
                       <li>Clique em "Nova Venda"</li>
-                      <li>Selecione um cliente (opcional) ou cadastre um novo</li>
+                      <li>
+                        Selecione um cliente (opcional) ou cadastre um novo
+                      </li>
                       <li>Escolha a forma de pagamento</li>
                       <li>Adicione produtos à venda</li>
                       <li>Ajuste quantidades e preços se necessário</li>
@@ -191,21 +245,44 @@ export default function Documentation() {
                     Gerenciamento completo de estoque:
                   </p>
                   <ul className="list-disc list-inside space-y-2 text-muted-foreground ml-4">
-                    <li><strong>Cadastrar Produto</strong>: Adicione novos produtos ao catálogo</li>
-                    <li><strong>Editar Produto</strong>: Atualize informações de produtos existentes</li>
-                    <li><strong>Excluir Produto</strong>: Remova produtos do sistema</li>
-                    <li><strong>Categorias</strong>: Organize produtos por categorias</li>
-                    <li><strong>Controle de Estoque</strong>: Monitore quantidades e estoque mínimo</li>
-                    <li><strong>Alertas</strong>: Receba avisos quando o estoque estiver baixo</li>
+                    <li>
+                      <strong>Cadastrar Produto</strong>: Adicione novos
+                      produtos ao catálogo
+                    </li>
+                    <li>
+                      <strong>Editar Produto</strong>: Atualize informações de
+                      produtos existentes
+                    </li>
+                    <li>
+                      <strong>Excluir Produto</strong>: Remova produtos do
+                      sistema
+                    </li>
+                    <li>
+                      <strong>Categorias</strong>: Organize produtos por
+                      categorias
+                    </li>
+                    <li>
+                      <strong>Controle de Estoque</strong>: Monitore quantidades
+                      e estoque mínimo
+                    </li>
+                    <li>
+                      <strong>Alertas</strong>: Receba avisos quando o estoque
+                      estiver baixo
+                    </li>
                   </ul>
                   <div className="mt-4 p-4 bg-muted rounded-lg">
                     <p className="font-semibold mb-2">Campos do Produto:</p>
                     <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
                       <li>Nome (obrigatório)</li>
-                      <li>Categoria (pode criar nova categoria sem sair da tela)</li>
+                      <li>
+                        Categoria (pode criar nova categoria sem sair da tela)
+                      </li>
                       <li>Descrição</li>
                       <li>Preço de Custo (obrigatório)</li>
-                      <li>Preço de Venda (obrigatório, deve ser maior ou igual ao custo)</li>
+                      <li>
+                        Preço de Venda (obrigatório, deve ser maior ou igual ao
+                        custo)
+                      </li>
                       <li>Quantidade em Estoque (obrigatório)</li>
                       <li>Estoque Mínimo (opcional)</li>
                     </ul>
@@ -226,11 +303,24 @@ export default function Documentation() {
                     Organize seus produtos por categorias:
                   </p>
                   <ul className="list-disc list-inside space-y-2 text-muted-foreground ml-4">
-                    <li><strong>Criar Categoria</strong>: Adicione novas categorias</li>
-                    <li><strong>Editar Categoria</strong>: Atualize informações</li>
-                    <li><strong>Excluir Categoria</strong>: Remova categorias não utilizadas</li>
-                    <li><strong>Busca</strong>: Encontre categorias rapidamente</li>
-                    <li><strong>Cadastro Rápido</strong>: Crie categorias diretamente no cadastro de produtos</li>
+                    <li>
+                      <strong>Criar Categoria</strong>: Adicione novas
+                      categorias
+                    </li>
+                    <li>
+                      <strong>Editar Categoria</strong>: Atualize informações
+                    </li>
+                    <li>
+                      <strong>Excluir Categoria</strong>: Remova categorias não
+                      utilizadas
+                    </li>
+                    <li>
+                      <strong>Busca</strong>: Encontre categorias rapidamente
+                    </li>
+                    <li>
+                      <strong>Cadastro Rápido</strong>: Crie categorias
+                      diretamente no cadastro de produtos
+                    </li>
                   </ul>
                 </CardContent>
               </Card>
@@ -248,11 +338,24 @@ export default function Documentation() {
                     Gerencie sua base de clientes:
                   </p>
                   <ul className="list-disc list-inside space-y-2 text-muted-foreground ml-4">
-                    <li><strong>Cadastrar Cliente</strong>: Adicione novos clientes</li>
-                    <li><strong>Editar Cliente</strong>: Atualize informações</li>
-                    <li><strong>Excluir Cliente</strong>: Remova clientes</li>
-                    <li><strong>Informações</strong>: Nome, email, telefone, endereço e observações</li>
-                    <li><strong>Cadastro Rápido</strong>: Crie clientes durante a venda</li>
+                    <li>
+                      <strong>Cadastrar Cliente</strong>: Adicione novos
+                      clientes
+                    </li>
+                    <li>
+                      <strong>Editar Cliente</strong>: Atualize informações
+                    </li>
+                    <li>
+                      <strong>Excluir Cliente</strong>: Remova clientes
+                    </li>
+                    <li>
+                      <strong>Informações</strong>: Nome, email, telefone,
+                      endereço e observações
+                    </li>
+                    <li>
+                      <strong>Cadastro Rápido</strong>: Crie clientes durante a
+                      venda
+                    </li>
                   </ul>
                 </CardContent>
               </Card>
@@ -270,10 +373,18 @@ export default function Documentation() {
                     Controle completo de gastos:
                   </p>
                   <ul className="list-disc list-inside space-y-2 text-muted-foreground ml-4">
-                    <li><strong>Criar Despesa</strong>: Registre novos gastos</li>
-                    <li><strong>Editar Despesa</strong>: Atualize informações</li>
-                    <li><strong>Excluir Despesa</strong>: Remova despesas</li>
-                    <li><strong>Recorrências</strong>: Configure despesas recorrentes
+                    <li>
+                      <strong>Criar Despesa</strong>: Registre novos gastos
+                    </li>
+                    <li>
+                      <strong>Editar Despesa</strong>: Atualize informações
+                    </li>
+                    <li>
+                      <strong>Excluir Despesa</strong>: Remova despesas
+                    </li>
+                    <li>
+                      <strong>Recorrências</strong>: Configure despesas
+                      recorrentes
                       <ul className="list-disc list-inside ml-6 mt-1 space-y-1">
                         <li>Diária</li>
                         <li>Semanal</li>
@@ -284,11 +395,19 @@ export default function Documentation() {
                         <li>Anual</li>
                       </ul>
                     </li>
-                    <li><strong>Filtros</strong>: Filtre por categoria e tipo (recorrente/avulsa)</li>
-                    <li><strong>Categorias</strong>: Organize despesas por categorias</li>
+                    <li>
+                      <strong>Filtros</strong>: Filtre por categoria e tipo
+                      (recorrente/avulsa)
+                    </li>
+                    <li>
+                      <strong>Categorias</strong>: Organize despesas por
+                      categorias
+                    </li>
                   </ul>
                   <div className="mt-4 p-4 bg-muted rounded-lg">
-                    <p className="font-semibold mb-2">Como criar uma despesa recorrente:</p>
+                    <p className="font-semibold mb-2">
+                      Como criar uma despesa recorrente:
+                    </p>
                     <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
                       <li>Clique em "Nova Despesa"</li>
                       <li>Preencha descrição, valor, categoria e data</li>
@@ -305,7 +424,7 @@ export default function Documentation() {
           {/* Funcionalidades */}
           <section id="funcionalidades" className="scroll-mt-6">
             <h2 className="text-3xl font-bold mb-6">Funcionalidades</h2>
-            
+
             <div className="grid gap-6 md:grid-cols-2">
               <Card>
                 <CardHeader>
@@ -316,8 +435,8 @@ export default function Documentation() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    Todos os campos de preço utilizam máscara monetária brasileira (R$), 
-                    facilitando a entrada de valores.
+                    Todos os campos de preço utilizam máscara monetária
+                    brasileira (R$), facilitando a entrada de valores.
                   </p>
                 </CardContent>
               </Card>
@@ -376,7 +495,7 @@ export default function Documentation() {
           {/* Dicas e Boas Práticas */}
           <section id="dicas" className="scroll-mt-6">
             <h2 className="text-3xl font-bold mb-6">Dicas e Boas Práticas</h2>
-            
+
             <div className="space-y-6">
               <Card>
                 <CardHeader>
@@ -384,16 +503,17 @@ export default function Documentation() {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <p className="text-muted-foreground">
-                    <strong>1. Categorias</strong>: Use categorias para organizar seus produtos. 
-                    Isso facilita a busca e o gerenciamento.
+                    <strong>1. Categorias</strong>: Use categorias para
+                    organizar seus produtos. Isso facilita a busca e o
+                    gerenciamento.
                   </p>
                   <p className="text-muted-foreground">
-                    <strong>2. Estoque Mínimo</strong>: Configure o estoque mínimo para receber 
-                    alertas antes de ficar sem produtos.
+                    <strong>2. Estoque Mínimo</strong>: Configure o estoque
+                    mínimo para receber alertas antes de ficar sem produtos.
                   </p>
                   <p className="text-muted-foreground">
-                    <strong>3. Clientes</strong>: Mantenha a base de clientes atualizada para 
-                    facilitar as vendas.
+                    <strong>3. Clientes</strong>: Mantenha a base de clientes
+                    atualizada para facilitar as vendas.
                   </p>
                 </CardContent>
               </Card>
@@ -404,16 +524,16 @@ export default function Documentation() {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <p className="text-muted-foreground">
-                    <strong>1. Cadastro Rápido</strong>: Use o cadastro rápido de clientes 
-                    durante a venda para não perder tempo.
+                    <strong>1. Cadastro Rápido</strong>: Use o cadastro rápido
+                    de clientes durante a venda para não perder tempo.
                   </p>
                   <p className="text-muted-foreground">
-                    <strong>2. Observações</strong>: Adicione observações importantes sobre 
-                    a venda para referência futura.
+                    <strong>2. Observações</strong>: Adicione observações
+                    importantes sobre a venda para referência futura.
                   </p>
                   <p className="text-muted-foreground">
-                    <strong>3. Histórico</strong>: Consulte o histórico de vendas regularmente 
-                    para identificar padrões.
+                    <strong>3. Histórico</strong>: Consulte o histórico de
+                    vendas regularmente para identificar padrões.
                   </p>
                 </CardContent>
               </Card>
@@ -424,16 +544,16 @@ export default function Documentation() {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <p className="text-muted-foreground">
-                    <strong>1. Recorrências</strong>: Configure despesas fixas como recorrentes 
-                    para economizar tempo.
+                    <strong>1. Recorrências</strong>: Configure despesas fixas
+                    como recorrentes para economizar tempo.
                   </p>
                   <p className="text-muted-foreground">
-                    <strong>2. Filtros</strong>: Use os filtros para analisar despesas por 
-                    categoria ou tipo.
+                    <strong>2. Filtros</strong>: Use os filtros para analisar
+                    despesas por categoria ou tipo.
                   </p>
                   <p className="text-muted-foreground">
-                    <strong>3. Categorias</strong>: Organize despesas por categorias para 
-                    melhor controle financeiro.
+                    <strong>3. Categorias</strong>: Organize despesas por
+                    categorias para melhor controle financeiro.
                   </p>
                 </CardContent>
               </Card>
@@ -444,15 +564,16 @@ export default function Documentation() {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <p className="text-muted-foreground">
-                    <strong>1. Monitoramento</strong>: Acompanhe o dashboard diariamente para 
-                    ter visão geral do negócio.
+                    <strong>1. Monitoramento</strong>: Acompanhe o dashboard
+                    diariamente para ter visão geral do negócio.
                   </p>
                   <p className="text-muted-foreground">
-                    <strong>2. Gráficos</strong>: Use os gráficos para identificar tendências 
-                    de vendas.
+                    <strong>2. Gráficos</strong>: Use os gráficos para
+                    identificar tendências de vendas.
                   </p>
                   <p className="text-muted-foreground">
-                    <strong>3. Alertas</strong>: Fique atento aos alertas de estoque baixo.
+                    <strong>3. Alertas</strong>: Fique atento aos alertas de
+                    estoque baixo.
                   </p>
                 </CardContent>
               </Card>
@@ -463,13 +584,16 @@ export default function Documentation() {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <p className="text-muted-foreground">
-                    <strong>1. Senha</strong>: Use uma senha forte e não compartilhe suas credenciais.
+                    <strong>1. Senha</strong>: Use uma senha forte e não
+                    compartilhe suas credenciais.
                   </p>
                   <p className="text-muted-foreground">
-                    <strong>2. Logout</strong>: Sempre faça logout ao terminar de usar a plataforma.
+                    <strong>2. Logout</strong>: Sempre faça logout ao terminar
+                    de usar a plataforma.
                   </p>
                   <p className="text-muted-foreground">
-                    <strong>3. Backup</strong>: Exporte seus dados regularmente (funcionalidade futura).
+                    <strong>3. Backup</strong>: Exporte seus dados regularmente
+                    (funcionalidade futura).
                   </p>
                 </CardContent>
               </Card>
@@ -479,7 +603,7 @@ export default function Documentation() {
           {/* Navegação */}
           <section id="navegacao" className="scroll-mt-6">
             <h2 className="text-3xl font-bold mb-6">Navegação</h2>
-            
+
             <div className="space-y-6">
               <Card>
                 <CardHeader>
@@ -493,12 +617,24 @@ export default function Documentation() {
                     O menu lateral permite acesso rápido a todos os módulos:
                   </p>
                   <ul className="list-disc list-inside space-y-2 text-muted-foreground ml-4">
-                    <li><strong>Dashboard</strong>: Visão geral</li>
-                    <li><strong>Vendas</strong>: Gerenciamento de vendas</li>
-                    <li><strong>Produtos</strong>: Controle de estoque</li>
-                    <li><strong>Categorias</strong>: Organização de categorias</li>
-                    <li><strong>Clientes</strong>: Base de clientes</li>
-                    <li><strong>Despesas</strong>: Controle de gastos</li>
+                    <li>
+                      <strong>Dashboard</strong>: Visão geral
+                    </li>
+                    <li>
+                      <strong>Vendas</strong>: Gerenciamento de vendas
+                    </li>
+                    <li>
+                      <strong>Produtos</strong>: Controle de estoque
+                    </li>
+                    <li>
+                      <strong>Categorias</strong>: Organização de categorias
+                    </li>
+                    <li>
+                      <strong>Clientes</strong>: Base de clientes
+                    </li>
+                    <li>
+                      <strong>Despesas</strong>: Controle de gastos
+                    </li>
                   </ul>
                 </CardContent>
               </Card>
@@ -534,7 +670,9 @@ export default function Documentation() {
                 </p>
                 <ol className="list-decimal list-inside space-y-2 text-muted-foreground ml-4">
                   <li>Consulte esta documentação</li>
-                  <li>Verifique as mensagens de erro (elas estão em português)</li>
+                  <li>
+                    Verifique as mensagens de erro (elas estão em português)
+                  </li>
                   <li>Entre em contato através dos canais de suporte</li>
                 </ol>
               </CardContent>
@@ -545,5 +683,3 @@ export default function Documentation() {
     </div>
   );
 }
-
-

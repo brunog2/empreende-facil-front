@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api, getErrorMessage } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,10 +13,11 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { TrendingUp, Loader2 } from "lucide-react";
+import { TrendingUp, Loader2, ShieldCheck } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { User } from "@/hooks/use-auth";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido").min(1, "O email é obrigatório"),
@@ -40,8 +41,8 @@ export default function Auth() {
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "adm@adm.com",
-      password: "123456",
+      email: "",
+      password: "",
     },
   });
 
@@ -61,9 +62,9 @@ export default function Auth() {
     if (accessToken) {
       // Validar token chamando a API
       api
-        .get("/auth/me")
-        .then(() => {
-          navigate("/");
+        .get<{ data: User }>("/auth/me")
+        .then(({ data }) => {
+          navigate(data.data.role === "admin" ? "/admin" : "/");
         })
         .catch(() => {
           // Token inválido, limpar e continuar na página de auth
@@ -85,6 +86,7 @@ export default function Auth() {
             fullName: string;
             businessName: string | null;
             phone: string | null;
+            role: "admin" | "customer";
           };
         };
       }>("/auth/login", {
@@ -92,14 +94,14 @@ export default function Auth() {
         password: data.password,
       });
 
-      const { accessToken, refreshToken } = response.data.data;
+      const { accessToken, refreshToken, user } = response.data.data;
 
       // Salvar tokens no localStorage
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
 
       toast.success("Login realizado com sucesso!");
-      navigate("/");
+      navigate(user.role === "admin" ? "/admin" : "/");
     } catch (error) {
       const errorMessage = getErrorMessage(error);
       // Traduzir mensagens de erro comuns
@@ -108,6 +110,9 @@ export default function Auth() {
         translatedMessage = "Email ou senha incorretos";
       } else if (errorMessage.includes("Too many requests")) {
         translatedMessage = "Muitas tentativas. Tente novamente mais tarde";
+      } else if (errorMessage.includes("Conta desativada")) {
+        translatedMessage =
+          "Sua conta está bloqueada. Entre em contato com o suporte";
       }
       toast.error(translatedMessage);
     }
@@ -293,6 +298,15 @@ export default function Auth() {
               </form>
             </TabsContent>
           </Tabs>
+          <div className="mt-6 border-t pt-5 text-center">
+            <Link
+              to="/admin/login"
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              Acesso administrativo
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>
