@@ -7,6 +7,7 @@ import {
   CreditCard,
   Layers3,
   WalletCards,
+  Settings,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -43,6 +44,7 @@ const menuItems = [
   { title: "Assinaturas", url: "/admin/assinaturas", icon: CreditCard },
   { title: "Planos", url: "/admin/planos", icon: Layers3 },
   { title: "Pagamentos", url: "/admin/pagamentos", icon: WalletCards },
+  { title: "Configurações", url: "/admin/configuracoes", icon: Settings },
 ];
 
 export function AdminSidebar() {
@@ -58,7 +60,7 @@ export function AdminSidebar() {
     queryClient.clear();
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
-    navigate("/admin/login");
+    navigate("/auth");
     toast.success("Logout realizado com sucesso");
   };
 
@@ -141,8 +143,7 @@ export function AdminSidebar() {
           <AlertDialogHeader>
             <AlertDialogTitle>Sair do painel administrativo?</AlertDialogTitle>
             <AlertDialogDescription>
-              Você precisará informar novamente suas credenciais de
-              administrador.
+              Você precisará entrar novamente para acessar o painel.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

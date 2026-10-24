@@ -190,7 +190,7 @@ export default function Sales() {
               Nova Venda
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-4xl sm:max-h-[90vh] sm:min-h-[640px] flex flex-col p-0 sm:p-6">
+          <DialogContent className="flex max-h-[calc(100dvh-1.5rem)] flex-col overflow-hidden p-0 sm:max-w-4xl sm:p-6">
             <DialogHeader className="flex-shrink-0 px-3 pt-3 sm:px-0 sm:pt-0">
               <DialogTitle>
                 {editingSale ? "Editar Venda" : "Nova Venda"}
@@ -201,7 +201,7 @@ export default function Sales() {
                   : "Adicione os produtos vendidos"}
               </DialogDescription>
             </DialogHeader>
-            <div className="flex-1 min-h-[400px] overflow-y-auto px-3 sm:px-0 pb-20 sm:pb-0">
+            <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-4 sm:px-0 sm:pb-0">
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-3 sm:space-y-4"

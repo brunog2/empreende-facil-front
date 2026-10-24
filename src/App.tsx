@@ -27,7 +27,7 @@ import Documentation from "./pages/Documentation";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
-import AdminLogin from "./pages/admin/AdminLogin";
+import AdminSettings from "./pages/admin/AdminSettings";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminSubscriptionsPage from "./features/subscriptions/pages/admin/AdminSubscriptionsPage";
@@ -96,7 +96,7 @@ const App = () => (
         <Routes>
           <Route path="/auth" element={<Auth />} />
           <Route path="/planos" element={<PlansPage />} />
-          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/login" element={<Navigate to="/auth" replace />} />
           <Route
             path="/admin/*"
             element={
@@ -119,6 +119,7 @@ const App = () => (
                           <Route path="assinaturas" element={<AdminSubscriptionsPage />} />
                           <Route path="planos" element={<AdminPlansPage />} />
                           <Route path="pagamentos" element={<AdminPaymentsPage />} />
+                          <Route path="configuracoes" element={<AdminSettings />} />
                           <Route
                             path="*"
                             element={<Navigate to="/admin" replace />}

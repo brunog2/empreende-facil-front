@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { api, getErrorMessage } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,9 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { TrendingUp, Loader2, ShieldCheck } from "lucide-react";
+import { TrendingUp, Loader2 } from "lucide-react";
+import { PasswordField } from "@/components/PasswordField";
+import { strongPasswordSchema } from "@/lib/password";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,7 +30,7 @@ const signupSchema = z.object({
   fullName: z.string().min(1, "O nome completo é obrigatório"),
   businessName: z.string().optional(),
   email: z.string().email("Email inválido").min(1, "O email é obrigatório"),
-  password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
+  password: strongPasswordSchema,
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -157,8 +159,8 @@ export default function Auth() {
       let translatedMessage = errorMessage;
       if (errorMessage.includes("Email já está em uso")) {
         translatedMessage = "Este email já está cadastrado";
-      } else if (errorMessage.includes("senha deve ter pelo menos")) {
-        translatedMessage = "A senha deve ter pelo menos 6 caracteres";
+      } else if (errorMessage.includes("senha deve ter")) {
+        translatedMessage = "A senha ainda não atende aos requisitos";
       } else if (errorMessage.includes("Email inválido")) {
         translatedMessage = "Email inválido";
       }
@@ -166,9 +168,13 @@ export default function Auth() {
     }
   };
 
+  const signupPassword = signupForm.watch("password");
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4">
-      <Card className="w-full max-w-md shadow-xl">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-sidebar p-4">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,hsl(var(--primary)/0.55),transparent_32%),radial-gradient(circle_at_88%_12%,hsl(158_70%_70%/0.28),transparent_26%),radial-gradient(circle_at_72%_86%,hsl(var(--primary)/0.4),transparent_34%)]" />
+      <div className="pointer-events-none absolute inset-0 opacity-25 [background-image:linear-gradient(hsl(var(--sidebar-border))_1px,transparent_1px),linear-gradient(90deg,hsl(var(--sidebar-border))_1px,transparent_1px)] [background-size:56px_56px]" />
+      <Card className="relative w-full max-w-md border-sidebar-border shadow-2xl">
         <CardHeader className="space-y-3 text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
             <TrendingUp className="h-8 w-8 text-primary" />
@@ -206,9 +212,9 @@ export default function Auth() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="login-password">Senha</Label>
-                  <Input
+                  <PasswordField
                     id="login-password"
-                    type="password"
+                    autoComplete="current-password"
                     placeholder="••••••••"
                     {...loginForm.register("password")}
                     error={loginForm.formState.errors.password?.message}
@@ -270,16 +276,15 @@ export default function Auth() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Senha *</Label>
-                  <Input
+                  <PasswordField
                     id="signup-password"
-                    type="password"
+                    autoComplete="new-password"
                     placeholder="••••••••"
+                    tips
+                    passwordValue={signupPassword}
                     {...signupForm.register("password")}
                     error={signupForm.formState.errors.password?.message}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Mínimo de 6 caracteres
-                  </p>
                 </div>
                 <Button
                   type="submit"
@@ -298,15 +303,6 @@ export default function Auth() {
               </form>
             </TabsContent>
           </Tabs>
-          <div className="mt-6 border-t pt-5 text-center">
-            <Link
-              to="/admin/login"
-              className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
-            >
-              <ShieldCheck className="h-4 w-4" />
-              Acesso administrativo
-            </Link>
-          </div>
         </CardContent>
       </Card>
     </div>
