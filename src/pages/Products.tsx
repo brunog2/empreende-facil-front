@@ -140,22 +140,19 @@ export default function Products() {
   }
 
   return (
-    <div
-      className="space-y-4 md:space-y-6 p-4 md:p-6 w-full"
-      style={{ maxWidth: "100vw", boxSizing: "border-box" }}
-    >
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-3xl font-bold">Produtos</h1>
+    <div className="w-full min-w-0 max-w-full space-y-4 p-4 md:space-y-6 md:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl font-bold sm:text-3xl">Produtos</h1>
           <p className="text-muted-foreground">
             Gerencie seu estoque e produtos
           </p>
         </div>
 
-        <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => handleOpenDialog()}>
+              <Button className="w-full" onClick={() => handleOpenDialog()}>
                 <Plus className="mr-2 h-4 w-4" />
                 Novo Produto
               </Button>
@@ -281,6 +278,7 @@ export default function Products() {
 
           <Button
             variant="outline"
+            className="w-full"
             onClick={() => setShowFilters(!showFilters)}
           >
             <Filter className="mr-2 h-4 w-4" />
@@ -454,8 +452,8 @@ export default function Products() {
                 : "Nenhum produto cadastrado ainda"}
             </div>
           ) : (
-            <div className="w-full overflow-x-auto px-6 sm:px-0">
-              <Table className="min-w-[600px] w-full">
+            <div className="w-full overflow-x-auto">
+              <Table className="w-full">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12">
@@ -468,10 +466,10 @@ export default function Products() {
                       />
                     </TableHead>
                     <TableHead>Produto</TableHead>
-                    <TableHead>Categoria</TableHead>
-                    <TableHead>Preço Custo</TableHead>
+                    <TableHead className="hidden md:table-cell">Categoria</TableHead>
+                    <TableHead className="hidden lg:table-cell">Preço Custo</TableHead>
                     <TableHead>Preço Venda</TableHead>
-                    <TableHead>Lucro Unitário</TableHead>
+                    <TableHead className="hidden md:table-cell">Lucro Unitário</TableHead>
                     <TableHead>Estoque</TableHead>
                     <TableHead className="text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -522,14 +520,14 @@ export default function Products() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           {categoryName ? (
                             <Badge variant="outline">{categoryName}</Badge>
                           ) : (
                             <span className="text-muted-foreground">-</span>
                           )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           {new Intl.NumberFormat("pt-BR", {
                             style: "currency",
                             currency: "BRL",
@@ -541,7 +539,7 @@ export default function Products() {
                             currency: "BRL",
                           }).format(product.salePrice)}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <div className="flex flex-col">
                             <span
                               className={
@@ -581,15 +579,14 @@ export default function Products() {
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
+                          <div className="flex justify-end gap-0.5 [&_button]:h-8 [&_button]:w-8">
                             <Button
-                              className="flex-1 w-40 max-w-40"
                               variant="ghost"
                               size="icon"
                               onClick={() => handleOpenStockDialog(product.id)}
                               title="Ajustar estoque do produto"
+                              aria-label="Ajustar estoque do produto"
                             >
-                              Ajustar estoque
                               <ArrowUpDown className="h-4 w-4" />
                             </Button>
                             <Button
@@ -616,7 +613,7 @@ export default function Products() {
             </div>
           )}
           {paginationMeta && paginationMeta.totalPages > 1 && (
-            <div className="flex items-center justify-between px-6 py-4 border-t">
+            <div className="flex flex-col gap-3 border-t px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
               <div className="text-sm text-muted-foreground">
                 Mostrando {(currentPage - 1) * pageSize + 1} a{" "}
                 {Math.min(currentPage * pageSize, paginationMeta.total)} de{" "}

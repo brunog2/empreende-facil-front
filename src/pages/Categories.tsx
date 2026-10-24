@@ -83,20 +83,17 @@ export default function Categories() {
   }
 
   return (
-    <div
-      className="space-y-6 p-6 w-full"
-      style={{ maxWidth: "100vw", boxSizing: "border-box" }}
-    >
-      <div className="flex items-center justify-between">
+    <div className="w-full min-w-0 max-w-full space-y-4 p-4 md:space-y-6 md:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-3xl font-bold">Categorias</h1>
+          <h1 className="font-display text-2xl font-bold sm:text-3xl">Categorias</h1>
           <p className="text-muted-foreground">
             Gerencie as categorias dos seus produtos
           </p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()}>
+            <Button className="w-full sm:w-auto" onClick={() => handleOpenDialog()}>
               <Plus className="mr-2 h-4 w-4" />
               Nova Categoria
             </Button>
@@ -249,8 +246,8 @@ export default function Categories() {
               Nenhuma categoria cadastrada ainda
             </div>
           ) : (
-            <div className="w-full overflow-x-auto px-6 sm:px-0">
-              <Table className="min-w-[600px] w-full">
+            <div className="w-full overflow-x-auto">
+              <Table className="w-full">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12">
@@ -263,7 +260,7 @@ export default function Categories() {
                       />
                     </TableHead>
                     <TableHead>Nome</TableHead>
-                    <TableHead>Descrição</TableHead>
+                    <TableHead className="hidden md:table-cell">Descrição</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -279,7 +276,7 @@ export default function Categories() {
                       <TableCell className="font-medium">
                         {category.name}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         {category.description ? (
                           <span className="text-sm text-muted-foreground">
                             {category.description}
@@ -289,7 +286,7 @@ export default function Categories() {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-0.5 [&_button]:h-8 [&_button]:w-8">
                           <Button
                             variant="ghost"
                             size="icon"
@@ -313,7 +310,7 @@ export default function Categories() {
             </div>
           )}
           {paginationMeta && paginationMeta.totalPages > 1 && (
-            <div className="flex items-center justify-between px-6 py-4 border-t">
+            <div className="flex flex-col gap-3 border-t px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
               <div className="text-sm text-muted-foreground">
                 Mostrando {(currentPage - 1) * pageSize + 1} a{" "}
                 {Math.min(currentPage * pageSize, paginationMeta.total)} de{" "}

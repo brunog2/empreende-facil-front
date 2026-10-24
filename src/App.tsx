@@ -43,6 +43,7 @@ import { PlanLimitWarningDialog } from "./features/subscriptions/components/Plan
 import ReportsPage from "./features/reports/pages/ReportsPage";
 import { PlanFeature } from "./features/subscriptions/types/subscription";
 import { UserPermission } from "./types/admin";
+import { BrandLogo } from "./components/BrandLogo";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -60,11 +61,9 @@ function HeaderLogo({ admin = false }: { admin?: boolean }) {
   return (
     <button
       onClick={() => navigate(admin ? "/admin" : "/")}
-      className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+      className="flex min-w-0 items-center gap-2 transition-opacity hover:opacity-80"
     >
-      <span className="font-display text-lg font-bold text-primary">
-        {admin ? "Gestão Pro Admin" : "Gestão Pro"}
-      </span>
+      <BrandLogo admin={admin} />
     </button>
   );
 }
@@ -102,14 +101,14 @@ const App = () => (
             element={
               <ProtectedRoute requiredRole="admin">
                 <SidebarProvider>
-                  <div className="flex min-h-screen w-full">
+                  <div className="flex h-dvh w-full overflow-hidden">
                     <AdminSidebar />
-                    <div className="flex min-w-0 flex-1 flex-col">
-                      <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4">
+                    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+                      <header className="z-10 flex h-[calc(3.5rem+env(safe-area-inset-top))] shrink-0 items-center gap-3 border-b bg-background px-3 pt-[env(safe-area-inset-top)] sm:h-16 sm:px-4 sm:pt-0">
                         <SidebarTrigger />
                         <HeaderLogo admin />
                       </header>
-                      <main className="min-w-0 flex-1 overflow-auto bg-muted/20">
+                      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-muted/20 pb-[env(safe-area-inset-bottom)]">
                         <Routes>
                           <Route path="" element={<AdminDashboard />} />
                           <Route
@@ -138,14 +137,14 @@ const App = () => (
               <ProtectedRoute requiredRole="customer">
                 <SubscriptionProvider>
                   <SidebarProvider>
-                  <div className="flex min-h-screen w-full">
+                  <div className="flex h-dvh w-full overflow-hidden">
                     <AppSidebar />
-                    <div className="flex min-w-0 flex-1 flex-col">
-                      <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4">
+                    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+                      <header className="z-10 flex h-[calc(3.5rem+env(safe-area-inset-top))] shrink-0 items-center gap-3 border-b bg-background px-3 pt-[env(safe-area-inset-top)] sm:h-16 sm:px-4 sm:pt-0">
                         <SidebarTrigger />
                         <HeaderLogo />
                       </header>
-                      <main className="min-w-0 flex-1 overflow-auto">
+                      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden pb-[env(safe-area-inset-bottom)]">
                         <SubscriptionNotices />
                         <PlanLimitWarningDialog />
                         <Routes>

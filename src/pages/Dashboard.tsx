@@ -444,47 +444,43 @@ export default function Dashboard() {
 
   return (
     <>
-      <div
-        className="space-y-4 md:space-y-6 p-4 md:p-6 w-full"
-        style={{ maxWidth: "100vw", boxSizing: "border-box" }}
-      >
-        {/* Destaque para Vendas */}
+      <div className="w-full min-w-0 max-w-full space-y-4 p-4 md:space-y-6 md:p-6">
         <Card className="border-primary bg-primary/5">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold mb-2">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <h2 className="mb-2 text-xl font-bold sm:text-2xl">
                   Registre uma Nova Venda
                 </h2>
-                <p className="text-muted-foreground mb-4">
+                <p className="mb-4 text-muted-foreground">
                   Crie uma venda rapidamente e aumente seu faturamento
                 </p>
                 <Button
                   onClick={() => navigate("/vendas?novaVenda=true")}
-                  size="lg"
-                  className="bg-primary hover:bg-primary/90"
+                  className="w-full bg-primary hover:bg-primary/90 sm:w-auto"
                 >
-                  <Plus className="mr-2 h-5 w-5" />
+                  <Plus className="mr-2 h-4 w-4" />
                   Nova Venda
                 </Button>
               </div>
-              <ShoppingCart className="h-24 w-24 text-primary/20" />
+              <ShoppingCart className="hidden h-16 w-16 shrink-0 text-primary/20 sm:block md:h-24 md:w-24" />
             </div>
           </CardContent>
         </Card>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="font-display text-2xl sm:text-3xl font-bold">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="font-display text-2xl font-bold sm:text-3xl">
               Dashboard
             </h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
+            <p className="text-sm text-muted-foreground sm:text-base">
               Visão geral do seu negócio
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
             <Button
               variant="outline"
+              className="w-full"
               onClick={() => setShowFilters(!showFilters)}
             >
               <Filter className="mr-2 h-4 w-4" />
@@ -503,8 +499,8 @@ export default function Dashboard() {
               )}
             </Button>
             <Button
+              className="w-full"
               onClick={() => navigate("/vendas?novaVenda=true")}
-              size="lg"
             >
               <Plus className="mr-2 h-4 w-4" />
               Nova Venda
@@ -711,10 +707,10 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-          <Card>
+        <div className="grid min-w-0 gap-4 grid-cols-1 md:grid-cols-2">
+          <Card className="min-w-0">
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <CardTitle>{chartTitle}</CardTitle>
                   <CardDescription>
@@ -738,7 +734,7 @@ export default function Dashboard() {
                 </Tabs>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="min-w-0 overflow-hidden">
               <ResponsiveContainer width="100%" height={300}>
                 {chartType === "bar" ? (
                   <BarChart data={salesChartData}>
@@ -854,8 +850,8 @@ export default function Dashboard() {
                   Nenhuma venda registrada ainda
                 </div>
               ) : (
-                <div className="w-full overflow-x-auto px-6 sm:px-0">
-                  <Table className="min-w-[400px] w-full">
+                <div className="w-full overflow-x-auto">
+                  <Table className="w-full">
                     <TableHeader>
                       <TableRow>
                         <TableHead>Data</TableHead>
@@ -934,12 +930,12 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="min-w-0">
             <CardHeader>
               <CardTitle>Categorias Mais Vendidas</CardTitle>
               <CardDescription>Distribuição por categoria</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="min-w-0 overflow-hidden">
               {topCategories.length === 0 ? (
                 <div className="py-12 text-center text-muted-foreground">
                   Nenhuma venda registrada ainda

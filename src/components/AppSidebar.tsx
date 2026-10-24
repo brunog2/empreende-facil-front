@@ -18,6 +18,7 @@ import {
 import { useCurrentUser } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { BrandLogo } from "@/components/BrandLogo";
 import { UserPermission } from "@/types/admin";
 import { useSubscription } from "@/features/subscriptions/context/SubscriptionProvider";
 import { PlanFeature } from "@/features/subscriptions/types/subscription";
@@ -115,10 +116,8 @@ export function AppSidebar() {
         )}
 
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 py-6">
-            <span className={`font-display text-lg font-bold text-sidebar-primary transition-opacity ${collapsed ? 'opacity-0' : 'opacity-100'}`}>
-              Gestão Pro
-            </span>
+          <SidebarGroupLabel className="h-auto px-3 py-3">
+            <BrandLogo collapsed={collapsed} />
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -155,8 +154,9 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        
-        <SidebarFooter className="border-t">
+      </SidebarContent>
+
+      <SidebarFooter className="border-t bg-sidebar">
           <div className={`p-2 ${collapsed ? 'flex justify-center' : ''}`}>
             <SidebarMenuButton
               onClick={() => setLogoutDialogOpen(true)}
@@ -167,7 +167,6 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </div>
         </SidebarFooter>
-      </SidebarContent>
 
       <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
         <AlertDialogContent>

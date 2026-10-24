@@ -233,23 +233,24 @@ export default function ReportsPage() {
     : [];
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 p-4 md:p-6">
+    <div className="mx-auto w-full min-w-0 max-w-7xl space-y-6 p-4 md:p-6">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-        <div>
+        <div className="min-w-0">
           <p className="mb-1 text-sm font-medium text-primary">
             Inteligência do negócio
           </p>
-          <h1 className="font-display text-3xl font-bold">Relatórios</h1>
+          <h1 className="font-display text-2xl font-bold sm:text-3xl">Relatórios</h1>
           <p className="text-muted-foreground">
             Analise resultados reais e proteja os dados da sua loja.
           </p>
         </div>
-        <div className="flex flex-col gap-3 rounded-lg border bg-card p-3 sm:flex-row sm:items-end">
-          <div className="space-y-1">
+        <div className="flex w-full min-w-0 flex-col gap-3 rounded-lg border bg-card p-3 sm:flex-row sm:items-end">
+          <div className="min-w-0 flex-1 space-y-1">
             <Label htmlFor="report-start">De</Label>
             <Input
               id="report-start"
               type="date"
+              className="w-full min-w-0"
               value={period.startDate}
               onChange={(event) =>
                 setPeriod((current) => ({
@@ -259,11 +260,12 @@ export default function ReportsPage() {
               }
             />
           </div>
-          <div className="space-y-1">
+          <div className="min-w-0 flex-1 space-y-1">
             <Label htmlFor="report-end">Até</Label>
             <Input
               id="report-end"
               type="date"
+              className="w-full min-w-0"
               value={period.endDate}
               onChange={(event) =>
                 setPeriod((current) => ({
@@ -295,10 +297,10 @@ export default function ReportsPage() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {summaryCards.map((item) => (
             <Card key={item.label}>
-              <CardContent className="flex items-center justify-between p-5">
-                <div>
+              <CardContent className="flex min-w-0 items-center justify-between gap-3 p-5">
+                <div className="min-w-0">
                   <p className="text-sm text-muted-foreground">{item.label}</p>
-                  <p className="mt-1 text-2xl font-bold">{item.value}</p>
+                  <p className="mt-1 break-words text-xl font-bold sm:text-2xl">{item.value}</p>
                 </div>
                 <div className="rounded-full bg-primary/10 p-3 text-primary">
                   <item.icon className="h-5 w-5" />
@@ -379,8 +381,8 @@ export default function ReportsPage() {
         ) : advanced.isLoading ? (
           <div className="h-80 animate-pulse rounded-xl bg-muted" />
         ) : (
-          <div className="grid gap-6 xl:grid-cols-2">
-            <Card>
+          <div className="grid min-w-0 gap-6 xl:grid-cols-2">
+            <Card className="min-w-0">
               <CardHeader>
                 <CardTitle>Evolução financeira</CardTitle>
                 <CardDescription>
@@ -388,7 +390,7 @@ export default function ReportsPage() {
                   operacional estimado por mês.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="h-80">
+              <CardContent className="h-80 min-w-0 overflow-hidden">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={monthlyData}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -442,14 +444,14 @@ export default function ReportsPage() {
                 </ResponsiveContainer>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="min-w-0">
               <CardHeader>
                 <CardTitle>Produtos com maior receita</CardTitle>
                 <CardDescription>
                   Itens que mais contribuíram no período.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="h-80">
+              <CardContent className="h-80 min-w-0 overflow-hidden">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={topProducts}

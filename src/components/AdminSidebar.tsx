@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   LayoutDashboard,
   LogOut,
-  ShieldCheck,
   UsersRound,
   CreditCard,
   Layers3,
@@ -13,6 +12,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { NavLink } from "@/components/NavLink";
+import { BrandLogo } from "@/components/BrandLogo";
 import {
   Sidebar,
   SidebarContent,
@@ -92,10 +92,9 @@ export function AdminSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel className="px-4 py-6">
             <span
-              className={`flex items-center gap-2 font-display text-lg font-bold text-sidebar-primary ${collapsed ? "opacity-0" : "opacity-100"}`}
+              className="flex h-auto items-center px-1 py-1"
             >
-              <ShieldCheck className="h-5 w-5" />
-              Gestão Pro Admin
+              <BrandLogo collapsed={collapsed} admin />
             </span>
           </SidebarGroupLabel>
           <SidebarGroupContent>

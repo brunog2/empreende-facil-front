@@ -71,15 +71,15 @@ export default function Expenses() {
   }
 
   return (
-    <div className="space-y-6 p-6 w-full" style={{ maxWidth: '100vw', boxSizing: 'border-box' }}>
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-3xl font-bold">Despesas</h1>
+    <div className="w-full min-w-0 max-w-full space-y-4 p-4 md:space-y-6 md:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl font-bold sm:text-3xl">Despesas</h1>
           <p className="text-muted-foreground">Controle seus gastos e despesas fixas</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()}>
+            <Button className="w-full sm:w-auto" onClick={() => handleOpenDialog()}>
               <Plus className="mr-2 h-4 w-4" />
               Nova Despesa
             </Button>
@@ -198,18 +198,18 @@ export default function Expenses() {
       {/* Destaque para Despesas */}
       <Card className="border-red-200 bg-red-50/50 dark:bg-red-950/20">
         <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold mb-2 text-red-600">Total de Despesas</h2>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-xl font-bold mb-2 text-red-600 sm:text-2xl">Total de Despesas</h2>
               <p className="text-muted-foreground mb-4">
                 {categoryFilter ? `Categoria: "${categoryFilter}"` : "Todas as categorias"} 
                 {recurringFilter !== null && (recurringFilter ? " - Recorrentes" : " - Avulsas")}
               </p>
-              <div className="text-4xl font-bold text-red-600">
+              <div className="text-3xl font-bold text-red-600 sm:text-4xl break-words">
                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalExpenses)}
               </div>
             </div>
-            <TrendingDown className="h-24 w-24 text-red-200" />
+            <TrendingDown className="hidden h-16 w-16 shrink-0 text-red-200 sm:block md:h-24 md:w-24" />
           </div>
         </CardContent>
       </Card>
@@ -315,8 +315,8 @@ export default function Expenses() {
               Nenhuma despesa registrada ainda
             </div>
           ) : (
-            <div className="w-full overflow-x-auto px-6 sm:px-0">
-              <Table className="min-w-[600px] w-full">
+            <div className="w-full overflow-x-auto">
+              <Table className="w-full">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12">
@@ -329,7 +329,7 @@ export default function Expenses() {
                       />
                     </TableHead>
                     <TableHead>Descrição</TableHead>
-                    <TableHead>Categoria</TableHead>
+                    <TableHead className="hidden md:table-cell">Categoria</TableHead>
                     <TableHead>Data</TableHead>
                     <TableHead>Valor</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
@@ -354,7 +354,7 @@ export default function Expenses() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <Badge variant="outline">{expense.category}</Badge>
                     </TableCell>
                     <TableCell>
@@ -364,7 +364,7 @@ export default function Expenses() {
                       {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(expense.amount)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
+                      <div className="flex justify-end gap-0.5 [&_button]:h-8 [&_button]:w-8">
                         <Button
                           variant="ghost"
                           size="icon"

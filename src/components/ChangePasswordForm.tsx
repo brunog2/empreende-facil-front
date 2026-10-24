@@ -78,7 +78,7 @@ export function ChangePasswordForm() {
         />
       </div>
       <div className="flex justify-end">
-        <Button type="submit" disabled={form.formState.isSubmitting}>
+        <Button type="submit" className="w-full sm:w-auto" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

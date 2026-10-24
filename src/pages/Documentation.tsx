@@ -30,7 +30,7 @@ export default function Documentation() {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex w-full min-w-0">
       {/* Sidebar de Navegação */}
       <aside className="w-64 border-r bg-muted/40 p-6 hidden lg:block">
         <div className="sticky top-6">
@@ -85,14 +85,14 @@ export default function Documentation() {
       </aside>
 
       {/* Conteúdo Principal */}
-      <main className="flex-1 p-6 lg:p-12 max-w-4xl mx-auto">
+      <div className="mx-auto w-full min-w-0 max-w-4xl flex-1 p-4 sm:p-6 lg:p-12">
         <div className="space-y-8">
           {/* Cabeçalho */}
           <div className="space-y-2">
-            <h1 className="font-display text-4xl font-bold">
+            <h1 className="font-display text-2xl font-bold sm:text-4xl">
               Documentação da Plataforma
             </h1>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-base text-muted-foreground sm:text-xl">
               Gestão Pro - Guia Completo de Uso
             </p>
             <p className="text-sm text-muted-foreground">
@@ -679,7 +679,7 @@ export default function Documentation() {
             </Card>
           </section>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

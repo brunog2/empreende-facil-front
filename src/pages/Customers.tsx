@@ -94,18 +94,15 @@ export default function Customers() {
   }
 
   return (
-    <div
-      className="space-y-6 p-6 w-full"
-      style={{ maxWidth: "100vw", boxSizing: "border-box" }}
-    >
-      <div className="flex items-center justify-between">
+    <div className="w-full min-w-0 max-w-full space-y-4 p-4 md:space-y-6 md:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-3xl font-bold">Clientes</h1>
+          <h1 className="font-display text-2xl font-bold sm:text-3xl">Clientes</h1>
           <p className="text-muted-foreground">Gerencie sua base de clientes</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()}>
+            <Button className="w-full sm:w-auto" onClick={() => handleOpenDialog()}>
               <Plus className="mr-2 h-4 w-4" />
               Novo Cliente
             </Button>
@@ -293,8 +290,8 @@ export default function Customers() {
               Nenhum cliente cadastrado ainda
             </div>
           ) : (
-            <div className="w-full overflow-x-auto px-6 sm:px-0">
-              <Table className="min-w-[600px] w-full">
+            <div className="w-full overflow-x-auto">
+              <Table className="w-full">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12">
@@ -308,7 +305,7 @@ export default function Customers() {
                     </TableHead>
                     <TableHead>Nome</TableHead>
                     <TableHead>Contato</TableHead>
-                    <TableHead>Localização</TableHead>
+                    <TableHead className="hidden md:table-cell">Localização</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -332,14 +329,14 @@ export default function Customers() {
                       <TableCell>
                         <div className="space-y-1">
                           {customer.email && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <Mail className="h-3 w-3 text-muted-foreground" />
+                            <div className="flex min-w-0 items-center gap-2 break-all text-sm">
+                              <Mail className="h-3 w-3 shrink-0 text-muted-foreground" />
                               {customer.email}
                             </div>
                           )}
                           {customer.phone && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <Phone className="h-3 w-3 text-muted-foreground" />
+                            <div className="flex min-w-0 items-center gap-2 break-all text-sm">
+                              <Phone className="h-3 w-3 shrink-0 text-muted-foreground" />
                               {customer.phone}
                             </div>
                           )}
@@ -350,9 +347,9 @@ export default function Customers() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         {customer.address ? (
-                          <div className="flex items-center gap-2 text-sm">
+                          <div className="flex min-w-0 items-center gap-2 break-all text-sm">
                             <MapPin className="h-3 w-3 text-muted-foreground" />
                             {customer.address}
                           </div>
@@ -361,7 +358,7 @@ export default function Customers() {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-0.5 [&_button]:h-8 [&_button]:w-8">
                           <Button
                             variant="ghost"
                             size="icon"
@@ -385,7 +382,7 @@ export default function Customers() {
             </div>
           )}
           {paginationMeta && paginationMeta.totalPages > 1 && (
-            <div className="flex items-center justify-between px-6 py-4 border-t">
+            <div className="flex flex-col gap-3 border-t px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
               <div className="text-sm text-muted-foreground">
                 Mostrando {(currentPage - 1) * pageSize + 1} a{" "}
                 {Math.min(currentPage * pageSize, paginationMeta.total)} de{" "}

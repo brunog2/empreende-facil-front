@@ -93,8 +93,8 @@ export default function PlansPage() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-gradient-to-b from-primary/5 via-background to-background">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:py-10">
-        <nav className="mb-10 flex items-center justify-between gap-4">
-          <Button variant="ghost" className="-ml-3" onClick={goBack}>
+        <nav className="mb-10 flex flex-wrap items-center justify-between gap-3">
+          <Button variant="ghost" className="-ml-3 h-auto max-w-full whitespace-normal py-2 text-left" onClick={goBack}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             {hasToken ? "Voltar para assinatura" : "Voltar para entrar"}
           </Button>

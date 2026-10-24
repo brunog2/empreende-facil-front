@@ -104,9 +104,9 @@ export default function Profile() {
   }
 
   return (
-    <div className="space-y-6 p-6 max-w-2xl mx-auto">
+    <div className="space-y-6 p-4 max-w-2xl mx-auto sm:p-6">
       <div>
-        <h1 className="font-display text-3xl font-bold">Meu Perfil</h1>
+        <h1 className="font-display text-2xl font-bold sm:text-3xl">Meu Perfil</h1>
         <p className="text-muted-foreground">Gerencie suas informações pessoais</p>
       </div>
 
@@ -173,6 +173,7 @@ export default function Profile() {
             <div className="flex justify-end">
               <Button
                 type="submit"
+                className="w-full sm:w-auto"
                 disabled={form.formState.isSubmitting}
               >
                 {form.formState.isSubmitting ? (
@@ -221,6 +222,7 @@ export default function Profile() {
             </p>
             <Button
               variant="destructive"
+              className="w-full sm:w-auto"
               onClick={() => setDeleteDialogOpen(true)}
             >
               <Trash2 className="mr-2 h-4 w-4" />

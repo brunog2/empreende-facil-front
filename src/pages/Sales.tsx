@@ -170,11 +170,8 @@ export default function Sales() {
   }
 
   return (
-    <div
-      className="space-y-4 md:space-y-6 p-4 md:p-6 w-full"
-      style={{ maxWidth: "100vw", boxSizing: "border-box" }}
-    >
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="w-full min-w-0 max-w-full space-y-4 p-4 md:space-y-6 md:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-display text-2xl sm:text-3xl font-bold">
             Vendas
@@ -185,7 +182,7 @@ export default function Sales() {
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()}>
+            <Button className="w-full sm:w-auto" onClick={() => handleOpenDialog()}>
               <Plus className="mr-2 h-4 w-4" />
               Nova Venda
             </Button>
@@ -267,7 +264,7 @@ export default function Sales() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <Label>Produtos *</Label>
                     <Button
                       type="button"
@@ -466,10 +463,11 @@ export default function Sales() {
         </Dialog>
       </div>
 
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4">
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
+            className="w-full sm:w-auto"
             onClick={() => setShowFilters(!showFilters)}
           >
             <Filter className="mr-2 h-4 w-4" />
@@ -573,8 +571,8 @@ export default function Sales() {
               Nenhuma venda registrada ainda
             </div>
           ) : (
-            <div className="w-full overflow-x-auto px-6 sm:px-0">
-              <Table className="min-w-[600px] w-full">
+            <div className="w-full overflow-x-auto">
+              <Table className="w-full">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12">
@@ -587,11 +585,11 @@ export default function Sales() {
                       />
                     </TableHead>
                     <TableHead>Data</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Produtos</TableHead>
-                    <TableHead>Pagamento</TableHead>
+                    <TableHead className="hidden md:table-cell">Cliente</TableHead>
+                    <TableHead className="hidden lg:table-cell">Produtos</TableHead>
+                    <TableHead className="hidden md:table-cell">Pagamento</TableHead>
                     <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="text-right">Margem bruta</TableHead>
+                    <TableHead className="hidden text-right md:table-cell">Margem bruta</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -616,10 +614,10 @@ export default function Sales() {
                         <TableCell>
                           {formatSaleDate(sale.saleDate, "dd/MM/yyyy HH:mm")}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           {sale.customer?.name || "Cliente não informado"}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           <div className="space-y-1">
                             {sale.saleItems.map((item, idx) => {
                               const product = item.productId
@@ -650,7 +648,7 @@ export default function Sales() {
                             })}
                           </div>
                         </TableCell>
-                        <TableCell className="capitalize">
+                        <TableCell className="hidden capitalize md:table-cell">
                           {sale.paymentMethod?.replace("_", " ") || "-"}
                         </TableCell>
                         <TableCell className="text-right font-medium">
@@ -660,7 +658,7 @@ export default function Sales() {
                           }).format(sale.totalAmount)}
                         </TableCell>
                         <TableCell
-                          className={`text-right font-medium ${
+                          className={`hidden text-right font-medium md:table-cell ${
                             grossMargin >= 0
                               ? "text-success"
                               : "text-destructive"
@@ -672,7 +670,7 @@ export default function Sales() {
                           }).format(grossMargin)}
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
+                          <div className="flex justify-end gap-0.5 [&_button]:h-8 [&_button]:w-8">
                             <Button
                               variant="ghost"
                               size="icon"
@@ -697,7 +695,7 @@ export default function Sales() {
             </div>
           )}
           {paginationMeta && paginationMeta.totalPages > 1 && (
-            <div className="flex items-center justify-between px-6 py-4 border-t">
+            <div className="flex flex-col gap-3 border-t px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
               <div className="text-sm text-muted-foreground">
                 Mostrando {(currentPage - 1) * pageSize + 1} a{" "}
                 {Math.min(currentPage * pageSize, paginationMeta.total)} de{" "}

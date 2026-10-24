@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { api, getErrorMessage } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +38,10 @@ type SignupFormData = z.infer<typeof signupSchema>;
 
 export default function Auth() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("login");
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get("cadastro") === "1" ? "signup" : "login",
+  );
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -171,10 +174,11 @@ export default function Auth() {
   const signupPassword = signupForm.watch("password");
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-sidebar p-4">
+    <div className="relative min-h-dvh overflow-x-hidden overflow-y-auto bg-sidebar">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,hsl(var(--primary)/0.55),transparent_32%),radial-gradient(circle_at_88%_12%,hsl(158_70%_70%/0.28),transparent_26%),radial-gradient(circle_at_72%_86%,hsl(var(--primary)/0.4),transparent_34%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-25 [background-image:linear-gradient(hsl(var(--sidebar-border))_1px,transparent_1px),linear-gradient(90deg,hsl(var(--sidebar-border))_1px,transparent_1px)] [background-size:56px_56px]" />
-      <Card className="relative w-full max-w-md border-sidebar-border shadow-2xl">
+      <div className="relative flex min-h-dvh items-start justify-center px-4 py-8 sm:items-center">
+      <Card className="w-full max-w-md border-sidebar-border shadow-2xl">
         <CardHeader className="space-y-3 text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
             <TrendingUp className="h-8 w-8 text-primary" />
@@ -311,6 +315,7 @@ export default function Auth() {
           </Tabs>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
