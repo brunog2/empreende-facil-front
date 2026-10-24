@@ -179,6 +179,8 @@ export default function Products() {
                     <Input
                       id="name"
                       {...form.register("name")}
+                      type="text"
+                      autoComplete="off"
                       error={form.formState.errors.name?.message}
                     />
                   </div>
@@ -215,6 +217,11 @@ export default function Products() {
                       }
                       error={form.formState.errors.costPrice?.message}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Se a matéria-prima já foi lançada em Despesas, não
+                      inclua esse valor aqui. Coloque só os outros custos
+                      deste produto.
+                    </p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="sale_price">Preço de Venda *</Label>
@@ -236,10 +243,11 @@ export default function Products() {
                   </Label>
                   <Input
                     id="stock_quantity"
-                    type="number"
                     step="0.001"
                     min="0"
                     {...form.register("stockQuantity", { valueAsNumber: true })}
+                    type="number"
+                    inputMode="decimal"
                     error={form.formState.errors.stockQuantity?.message}
                   />
                 </div>
@@ -310,6 +318,8 @@ export default function Products() {
                   id="search"
                   placeholder="Nome, descrição ou categoria..."
                   {...filtersForm.register("searchTerm")}
+                  type="search"
+                  inputMode="search"
                 />
               </div>
               <div className="space-y-2">
@@ -769,12 +779,13 @@ export default function Products() {
                       </Button>
                       <Input
                         id="stock-quantity"
-                        type="number"
                         step="0.001"
                         min="0"
                         {...stockForm.register("stockQuantity", {
                           valueAsNumber: true,
                         })}
+                        type="number"
+                        inputMode="decimal"
                         className="text-center"
                       />
                       <Button

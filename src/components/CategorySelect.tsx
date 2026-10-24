@@ -217,6 +217,8 @@ export function CategorySelect({ value, onChange, error }: CategorySelectProps) 
               <Input
                 id="category-name"
                 {...form.register("name")}
+                type="text"
+                autoComplete="off"
                 error={form.formState.errors.name?.message}
               />
             </div>
@@ -225,6 +227,8 @@ export function CategorySelect({ value, onChange, error }: CategorySelectProps) 
               <Input
                 id="category-description"
                 {...form.register("description")}
+                type="text"
+                autoComplete="off"
                 error={form.formState.errors.description?.message}
               />
             </div>

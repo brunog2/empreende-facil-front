@@ -121,6 +121,8 @@ export default function Categories() {
                 <Input
                   id="name"
                   {...form.register("name")}
+                  type="text"
+                  autoComplete="off"
                   error={form.formState.errors.name?.message}
                 />
               </div>
@@ -197,6 +199,8 @@ export default function Categories() {
                   id="search"
                   placeholder="Nome ou descrição..."
                   {...filtersForm.register("searchTerm")}
+                  type="search"
+                  inputMode="search"
                 />
               </div>
             </div>

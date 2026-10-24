@@ -322,6 +322,7 @@ export default function Sales() {
                           <Label>Quantidade</Label>
                           <Input
                             type="number"
+                            inputMode="decimal"
                             step="0.01"
                             min="0.01"
                             value={
@@ -506,6 +507,8 @@ export default function Sales() {
                   id="search"
                   placeholder="Produto ou cliente..."
                   {...filtersForm.register("searchTerm")}
+                  type="search"
+                  inputMode="search"
                 />
               </div>
               <div className="space-y-2">

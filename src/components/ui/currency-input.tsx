@@ -22,6 +22,8 @@ const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
       <div className="w-full">
         <NumericFormat
           {...props}
+          inputMode="decimal"
+          autoComplete="off"
           getInputRef={inputRef}
           value={value || ""}
           thousandSeparator="."

@@ -97,6 +97,8 @@ export default function Expenses() {
                 <Input
                   id="description"
                   {...form.register("description")}
+                  type="text"
+                  autoComplete="off"
                   placeholder="Ex: Conta de luz, Aluguel, etc."
                   error={form.formState.errors.description?.message}
                 />

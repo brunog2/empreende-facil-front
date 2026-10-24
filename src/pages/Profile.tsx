@@ -127,6 +127,8 @@ export default function Profile() {
               <Input
                 id="email"
                 type="email"
+                inputMode="email"
+                autoComplete="email"
                 value={user.email}
                 disabled
                 className="bg-muted"
@@ -141,6 +143,8 @@ export default function Profile() {
               <Input
                 id="fullName"
                 {...form.register("fullName")}
+                type="text"
+                autoComplete="name"
                 error={form.formState.errors.fullName?.message}
               />
             </div>
@@ -150,6 +154,8 @@ export default function Profile() {
               <Input
                 id="businessName"
                 {...form.register("businessName")}
+                type="text"
+                autoComplete="organization"
                 error={form.formState.errors.businessName?.message}
               />
             </div>

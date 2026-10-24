@@ -217,6 +217,8 @@ export function ProductSelect({ value, onChange, error }: ProductSelectProps) {
               <Input
                 id="product-name"
                 {...form.register("name")}
+                type="text"
+                autoComplete="off"
                 error={form.formState.errors.name?.message}
               />
             </div>
@@ -236,6 +238,10 @@ export function ProductSelect({ value, onChange, error }: ProductSelectProps) {
                   onChange={(value) => form.setValue("costPrice", value || 0, { shouldValidate: true })}
                   error={form.formState.errors.costPrice?.message}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Se a matéria-prima já foi lançada em Despesas, não inclua
+                  esse valor aqui. Coloque só os outros custos deste produto.
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="product-sale-price">Preço de Venda *</Label>
@@ -251,6 +257,7 @@ export function ProductSelect({ value, onChange, error }: ProductSelectProps) {
               <Input
                 id="product-stock"
                 type="number"
+                inputMode="decimal"
                 step="0.01"
                 min="0"
                 {...form.register("stockQuantity", { valueAsNumber: true })}

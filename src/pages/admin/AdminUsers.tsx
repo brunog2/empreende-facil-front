@@ -230,6 +230,8 @@ export default function AdminUsers() {
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
                 className="pl-9"
+                type="search"
+                inputMode="search"
                 placeholder="Buscar por nome, email ou negócio..."
               />
             </div>
@@ -418,6 +420,8 @@ export default function AdminUsers() {
                 <Label htmlFor="managed-full-name">Nome completo</Label>
                 <Input
                   id="managed-full-name"
+                  type="text"
+                  autoComplete="name"
                   value={form.fullName}
                   onChange={(event) =>
                     setForm({ ...form, fullName: event.target.value })
@@ -429,6 +433,8 @@ export default function AdminUsers() {
                 <Input
                   id="managed-email"
                   type="email"
+                  inputMode="email"
+                  autoComplete="email"
                   value={form.email}
                   onChange={(event) =>
                     setForm({ ...form, email: event.target.value })
@@ -439,6 +445,8 @@ export default function AdminUsers() {
                 <Label htmlFor="managed-business">Nome do negócio</Label>
                 <Input
                   id="managed-business"
+                  type="text"
+                  autoComplete="organization"
                   value={form.businessName}
                   onChange={(event) =>
                     setForm({ ...form, businessName: event.target.value })
@@ -449,6 +457,9 @@ export default function AdminUsers() {
                 <Label htmlFor="managed-phone">Telefone</Label>
                 <Input
                   id="managed-phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
                   value={form.phone}
                   onChange={(event) =>
                     setForm({ ...form, phone: event.target.value })

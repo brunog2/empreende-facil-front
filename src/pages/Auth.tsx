@@ -204,9 +204,11 @@ export default function Auth() {
                   <Label htmlFor="login-email">Email</Label>
                   <Input
                     id="login-email"
-                    type="email"
                     placeholder="seu@email.com"
                     {...loginForm.register("email")}
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
                     error={loginForm.formState.errors.email?.message}
                   />
                 </div>
@@ -246,9 +248,10 @@ export default function Auth() {
                   <Label htmlFor="signup-name">Nome Completo *</Label>
                   <Input
                     id="signup-name"
-                    type="text"
                     placeholder="Seu nome"
                     {...signupForm.register("fullName")}
+                    type="text"
+                    autoComplete="name"
                     error={signupForm.formState.errors.fullName?.message}
                   />
                 </div>
@@ -258,9 +261,10 @@ export default function Auth() {
                   </Label>
                   <Input
                     id="signup-business"
-                    type="text"
                     placeholder="Minha Loja"
                     {...signupForm.register("businessName")}
+                    type="text"
+                    autoComplete="organization"
                     error={signupForm.formState.errors.businessName?.message}
                   />
                 </div>
@@ -268,9 +272,11 @@ export default function Auth() {
                   <Label htmlFor="signup-email">Email *</Label>
                   <Input
                     id="signup-email"
-                    type="email"
                     placeholder="seu@email.com"
                     {...signupForm.register("email")}
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
                     error={signupForm.formState.errors.email?.message}
                   />
                 </div>

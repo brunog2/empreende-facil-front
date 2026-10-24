@@ -249,6 +249,8 @@ export default function ProductDetails() {
                   <Input
                     id="name"
                     {...form.register("name")}
+                    type="text"
+                    autoComplete="off"
                     error={form.formState.errors.name?.message}
                   />
                 ) : (
@@ -320,6 +322,10 @@ export default function ProductDetails() {
                     }).format(product.costPrice)}
                   </p>
                 )}
+                <p className="text-xs text-muted-foreground">
+                  Se a matéria-prima já foi lançada em Despesas, não inclua
+                  esse valor aqui. Coloque só os outros custos deste produto.
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -350,10 +356,11 @@ export default function ProductDetails() {
                 {isEditing ? (
                   <Input
                     id="stockQuantity"
-                    type="number"
                     step="0.001"
                     min="0"
                     {...form.register("stockQuantity", { valueAsNumber: true })}
+                    type="number"
+                    inputMode="decimal"
                     error={form.formState.errors.stockQuantity?.message}
                   />
                 ) : (

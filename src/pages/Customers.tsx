@@ -130,6 +130,8 @@ export default function Customers() {
                 <Input
                   id="name"
                   {...form.register("name")}
+                  type="text"
+                  autoComplete="name"
                   error={form.formState.errors.name?.message}
                 />
               </div>
@@ -138,8 +140,10 @@ export default function Customers() {
                   <Label htmlFor="email">Email (Opcional)</Label>
                   <Input
                     id="email"
-                    type="email"
                     {...form.register("email")}
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
                     error={form.formState.errors.email?.message}
                   />
                 </div>
@@ -162,6 +166,8 @@ export default function Customers() {
                 <Input
                   id="address"
                   {...form.register("address")}
+                  type="text"
+                  autoComplete="street-address"
                   error={form.formState.errors.address?.message}
                 />
               </div>
@@ -237,6 +243,8 @@ export default function Customers() {
                   id="search"
                   placeholder="Nome, email, telefone ou endereço..."
                   {...filtersForm.register("searchTerm")}
+                  type="search"
+                  inputMode="search"
                 />
               </div>
             </div>

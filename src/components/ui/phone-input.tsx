@@ -50,7 +50,6 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
     return (
       <Input
         ref={ref}
-        type="text"
         value={value}
         onChange={handleChange}
         placeholder="(00) 00000-0000"
@@ -58,6 +57,9 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
         className={cn(className)}
         error={error}
         {...props}
+        type="tel"
+        inputMode="tel"
+        autoComplete={props.autoComplete ?? "tel"}
       />
     );
   }

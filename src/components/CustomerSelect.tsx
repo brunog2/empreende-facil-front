@@ -181,6 +181,8 @@ export function CustomerSelect({ value, onChange, error }: CustomerSelectProps) 
               <Input
                 id="customer-name"
                 {...form.register("name")}
+                type="text"
+                autoComplete="name"
                 error={form.formState.errors.name?.message}
               />
             </div>
@@ -189,8 +191,10 @@ export function CustomerSelect({ value, onChange, error }: CustomerSelectProps) 
                 <Label htmlFor="customer-email">Email</Label>
                 <Input
                   id="customer-email"
-                  type="email"
                   {...form.register("email")}
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
                   error={form.formState.errors.email?.message}
                 />
               </div>
@@ -209,6 +213,8 @@ export function CustomerSelect({ value, onChange, error }: CustomerSelectProps) 
               <Input
                 id="customer-address"
                 {...form.register("address")}
+                type="text"
+                autoComplete="street-address"
                 error={form.formState.errors.address?.message}
               />
             </div>
