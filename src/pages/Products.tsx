@@ -16,7 +16,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Table,
@@ -150,13 +149,11 @@ export default function Products() {
         </div>
 
         <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+          <Button className="w-full" onClick={() => navigate("/produtos/novo")}>
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Produto
+          </Button>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="w-full" onClick={() => handleOpenDialog()}>
-                <Plus className="mr-2 h-4 w-4" />
-                Novo Produto
-              </Button>
-            </DialogTrigger>
             <DialogContent className="sm:max-w-2xl">
               <DialogHeader>
                 <DialogTitle>

@@ -456,7 +456,7 @@ export default function Dashboard() {
                   Crie uma venda rapidamente e aumente seu faturamento
                 </p>
                 <Button
-                  onClick={() => navigate("/vendas?novaVenda=true")}
+                  onClick={() => navigate("/vendas/nova")}
                   className="w-full bg-primary hover:bg-primary/90 sm:w-auto"
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -500,7 +500,7 @@ export default function Dashboard() {
             </Button>
             <Button
               className="w-full"
-              onClick={() => navigate("/vendas?novaVenda=true")}
+              onClick={() => navigate("/vendas/nova")}
             >
               <Plus className="mr-2 h-4 w-4" />
               Nova Venda

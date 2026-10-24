@@ -17,6 +17,8 @@ import { PermissionRoute } from "@/components/PermissionRoute";
 import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
 import ProductDetails from "./pages/ProductDetails";
+import SaleFormPage from "./pages/SaleFormPage";
+import ProductFormPage from "./pages/ProductFormPage";
 import Sales from "./pages/Sales";
 import Expenses from "./pages/Expenses";
 import Customers from "./pages/Customers";
@@ -158,10 +160,34 @@ const App = () => (
                             }
                           />
                           <Route
+                            path="/produtos/novo"
+                            element={
+                              <BusinessRoute permission="products" feature="products">
+                                <ProductFormPage />
+                              </BusinessRoute>
+                            }
+                          />
+                          <Route
                             path="/produtos/:id"
                             element={
                               <BusinessRoute permission="products" feature="products">
                                 <ProductDetails />
+                              </BusinessRoute>
+                            }
+                          />
+                          <Route
+                            path="/vendas/nova"
+                            element={
+                              <BusinessRoute permission="sales" feature="sales">
+                                <SaleFormPage />
+                              </BusinessRoute>
+                            }
+                          />
+                          <Route
+                            path="/vendas/:id/editar"
+                            element={
+                              <BusinessRoute permission="sales" feature="sales">
+                                <SaleFormPage />
                               </BusinessRoute>
                             }
                           />

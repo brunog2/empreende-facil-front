@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
@@ -10,14 +9,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   Table,
   TableBody,
   TableCell,
@@ -25,13 +16,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,15 +26,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Trash2, Pencil, Loader2, Filter, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SalesShimmer } from "@/components/shimmer/SalesShimmer";
 import { format } from "date-fns";
-import { CustomerSelect } from "@/components/CustomerSelect";
-import { ProductSelect } from "@/components/ProductSelect";
-import { CurrencyInput } from "@/components/ui/currency-input";
 import { useSalesPage } from "@/hooks/use-sales-page";
 
 // Helper para extrair apenas a data (YYYY-MM-DD) de uma string ISO, ignorando timezone
@@ -94,25 +74,13 @@ export default function Sales() {
   const {
     sales,
     products,
-    editingSale,
     isLoading,
     paginationMeta,
     currentPage,
     setCurrentPage,
     pageSize,
-    form,
-    fields,
-    addSaleItem,
-    updateSaleItem,
-    removeSaleItem,
-    calculateTotal,
-    onSubmit,
-    dialogOpen,
-    setDialogOpen,
     deleteDialogOpen,
     setDeleteDialogOpen,
-    handleOpenDialog,
-    handleCloseDialog,
     handleDeleteClick,
     handleConfirmDelete,
     deleteSale,
@@ -130,40 +98,9 @@ export default function Sales() {
     setShowFilters,
     hasActiveFilters,
     clearFilters,
-    createSale,
-    updateSale,
   } = useSalesPage();
 
   const navigate = useNavigate();
-
-  // Estado local para valores temporários dos inputs de quantidade
-  const [quantityInputs, setQuantityInputs] = useState<Record<number, string>>(
-    {},
-  );
-
-  // Sincronizar valores do form com o estado local quando o dialog abre ou campos são adicionados
-  useEffect(() => {
-    if (!dialogOpen) {
-      setQuantityInputs({});
-      return;
-    }
-
-    setQuantityInputs((prev) => {
-      const newValues: Record<number, string> = { ...prev };
-      fields.forEach((_, index) => {
-        // Só inicializa se não existir no estado local
-        if (newValues[index] === undefined) {
-          const item = form.getValues(`items.${index}`);
-          if (item?.quantity !== undefined) {
-            newValues[index] = item.quantity.toString();
-          } else {
-            newValues[index] = "1";
-          }
-        }
-      });
-      return newValues;
-    });
-  }, [fields.length, dialogOpen, form]);
 
   if (isLoading) {
     return <SalesShimmer />;
@@ -180,287 +117,10 @@ export default function Sales() {
             Registre e acompanhe suas vendas
           </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="w-full sm:w-auto" onClick={() => handleOpenDialog()}>
-              <Plus className="mr-2 h-4 w-4" />
-              Nova Venda
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="flex max-h-[calc(100dvh-1.5rem)] flex-col overflow-hidden p-0 sm:max-w-4xl sm:p-6">
-            <DialogHeader className="flex-shrink-0 px-3 pt-3 sm:px-0 sm:pt-0">
-              <DialogTitle>
-                {editingSale ? "Editar Venda" : "Nova Venda"}
-              </DialogTitle>
-              <DialogDescription>
-                {editingSale
-                  ? "Atualize os dados da venda"
-                  : "Adicione os produtos vendidos"}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-4 sm:px-0 sm:pb-0">
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-3 sm:space-y-4"
-                id="sale-form"
-              >
-                <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="customer">Cliente (Opcional)</Label>
-                    <CustomerSelect
-                      value={form.watch("customerId")}
-                      onChange={(value) =>
-                        form.setValue("customerId", value || null)
-                      }
-                      error={form.formState.errors.customerId?.message}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="payment">Forma de Pagamento *</Label>
-                    <Select
-                      value={form.watch("paymentMethod")}
-                      onValueChange={(value) =>
-                        form.setValue("paymentMethod", value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                        <SelectItem value="cartao_credito">
-                          Cartão de Crédito
-                        </SelectItem>
-                        <SelectItem value="cartao_debito">
-                          Cartão de Débito
-                        </SelectItem>
-                        <SelectItem value="pix">PIX</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {form.formState.errors.paymentMethod && (
-                      <p className="text-sm text-destructive">
-                        {form.formState.errors.paymentMethod.message}
-                      </p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="saleDate">Data da Venda *</Label>
-                    <Input
-                      id="saleDate"
-                      type="date"
-                      {...form.register("saleDate")}
-                      error={form.formState.errors.saleDate?.message}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="saleTime">Hora da Venda *</Label>
-                    <Input
-                      id="saleTime"
-                      type="time"
-                      {...form.register("saleTime")}
-                      error={form.formState.errors.saleTime?.message}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <Label>Produtos *</Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={addSaleItem}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Adicionar Produto
-                    </Button>
-                  </div>
-
-                  {fields.length === 0 && (
-                    <p className="text-sm text-destructive">
-                      Adicione pelo menos um produto à venda
-                    </p>
-                  )}
-
-                  {fields.map((field, index) => {
-                    const item = form.watch(`items.${index}`);
-                    const product = products.find(
-                      (p) => p.id === item?.productId,
-                    );
-                    const isOutOfStock = product && product.stockQuantity <= 0;
-                    const unitPrice =
-                      form.watch(`items.${index}.unitPrice`) || 0;
-
-                    return (
-                      <div
-                        key={field.id}
-                        className="flex flex-col sm:flex-row gap-3 sm:gap-2 items-stretch sm:items-end p-3 sm:p-4 border rounded-lg"
-                      >
-                        <div className="flex-1 w-full space-y-2">
-                          <Label>Produto</Label>
-                          <ProductSelect
-                            value={item?.productId || ""}
-                            onChange={(value) =>
-                              updateSaleItem(index, "productId", value)
-                            }
-                            error={
-                              form.formState.errors.items?.[index]?.productId
-                                ?.message
-                            }
-                          />
-                          {isOutOfStock && (
-                            <p className="text-sm text-destructive mt-1">
-                              Produto sem estoque
-                            </p>
-                          )}
-                        </div>
-                        <div className="w-full sm:w-28 space-y-2">
-                          <Label>Quantidade</Label>
-                          <Input
-                            type="number"
-                            inputMode="decimal"
-                            step="0.01"
-                            min="0.01"
-                            value={
-                              quantityInputs[index] ?? item?.quantity ?? ""
-                            }
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              // Atualiza o estado local imediatamente (permite valores vazios)
-                              setQuantityInputs((prev) => ({
-                                ...prev,
-                                [index]: value,
-                              }));
-                              // Atualiza o form apenas se o valor for válido
-                              if (value !== "") {
-                                const numValue = parseFloat(value);
-                                if (!isNaN(numValue) && numValue > 0) {
-                                  form.setValue(
-                                    `items.${index}.quantity` as `items.${number}.quantity`,
-                                    numValue,
-                                    { shouldValidate: true },
-                                  );
-                                }
-                              }
-                            }}
-                            onBlur={(e) => {
-                              const value = e.target.value;
-                              const numValue = parseFloat(value);
-                              const finalValue =
-                                value === "" ||
-                                isNaN(numValue) ||
-                                numValue < 0.01
-                                  ? 1
-                                  : numValue;
-                              // Atualiza o form e o estado local
-                              form.setValue(
-                                `items.${index}.quantity` as `items.${number}.quantity`,
-                                finalValue,
-                                { shouldValidate: true },
-                              );
-                              setQuantityInputs((prev) => ({
-                                ...prev,
-                                [index]: finalValue.toString(),
-                              }));
-                            }}
-                            className={
-                              form.formState.errors.items?.[index]?.quantity
-                                ? "border-destructive"
-                                : ""
-                            }
-                          />
-                          {form.formState.errors.items?.[index]?.quantity && (
-                            <p className="text-sm text-destructive mt-1">
-                              {
-                                form.formState.errors.items[index]?.quantity
-                                  ?.message
-                              }
-                            </p>
-                          )}
-                        </div>
-                        <div className="w-full sm:w-40 space-y-2">
-                          <Label>Preço Unit.</Label>
-                          <CurrencyInput
-                            value={unitPrice}
-                            onChange={(value) => {
-                              form.setValue(
-                                `items.${index}.unitPrice`,
-                                value || 0,
-                                { shouldValidate: true },
-                              );
-                            }}
-                            error={
-                              form.formState.errors.items?.[index]?.unitPrice
-                                ?.message
-                            }
-                          />
-                        </div>
-                        <div className="flex items-center justify-end sm:justify-start h-[2.5rem] sm:h-auto">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeSaleItem(index)}
-                            className="sm:mt-0"
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Observações</Label>
-                  <Textarea
-                    id="notes"
-                    {...form.register("notes")}
-                    rows={3}
-                    placeholder="Observações sobre a venda..."
-                    className="resize-none"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between rounded-lg border p-3 sm:p-4 bg-muted/50">
-                  <span className="font-semibold text-sm sm:text-base">
-                    Total:
-                  </span>
-                  <span className="text-xl sm:text-2xl font-bold text-primary">
-                    {new Intl.NumberFormat("pt-BR", {
-                      style: "currency",
-                      currency: "BRL",
-                    }).format(calculateTotal())}
-                  </span>
-                </div>
-              </form>
-            </div>
-            <div className="flex-shrink-0 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-2 sm:pt-4 border-t mt-2 sm:mt-0 px-3 pb-3 sm:px-0 sm:pb-0 bg-background sm:bg-transparent sticky bottom-0 sm:static z-10">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCloseDialog}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                form="sale-form"
-                disabled={createSale.isPending || updateSale.isPending}
-              >
-                {createSale.isPending || updateSale.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {editingSale ? "Atualizando..." : "Finalizando..."}
-                  </>
-                ) : (
-                  <>{editingSale ? "Atualizar" : "Finalizar"} Venda</>
-                )}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button className="w-full sm:w-auto" onClick={() => navigate("/vendas/nova")}>
+          <Plus className="mr-2 h-4 w-4" />
+          Nova Venda
+        </Button>
       </div>
 
       <div className="mb-4">
@@ -674,7 +334,7 @@ export default function Sales() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleOpenDialog(sale.id)}
+                              onClick={() => navigate(`/vendas/${sale.id}/editar`)}
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
