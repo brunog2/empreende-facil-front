@@ -18,7 +18,12 @@ export default {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         display: ['Outfit', 'Inter', 'system-ui', 'sans-serif'],
       },
+      boxShadow: {
+        soft: "0 24px 70px -32px rgba(23, 33, 43, 0.28)",
+        card: "0 12px 38px -24px rgba(23, 33, 43, 0.28)",
+      },
       colors: {
+        ink: "#17212b",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -27,6 +32,16 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          50: "#eefcf6",
+          100: "#d7f7e8",
+          200: "#b1eed4",
+          300: "#7de0b9",
+          400: "#45ca99",
+          500: "#28ad7e",
+          600: "#1c8b65",
+          700: "#197052",
+          800: "#185943",
+          900: "#164938",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",

@@ -25,6 +25,7 @@ import Customers from "./pages/Customers";
 import Categories from "./pages/Categories";
 import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import UsageGuide from "./pages/UsageGuide";
 import Documentation from "./pages/Documentation";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
@@ -97,6 +98,9 @@ const App = () => (
         <Routes>
           <Route path="/auth" element={<Auth />} />
           <Route path="/planos" element={<PlansPage />} />
+          <Route path="/privacidade" element={<PrivacyPolicy />} />
+          <Route path="/termos" element={<TermsOfService />} />
+          <Route path="/guia" element={<UsageGuide />} />
           <Route path="/admin/login" element={<Navigate to="/auth" replace />} />
           <Route
             path="/admin/*"
@@ -236,11 +240,6 @@ const App = () => (
                           <Route
                             path="/documentacao"
                             element={<Documentation />}
-                          />
-                          <Route path="/termos" element={<TermsOfService />} />
-                          <Route
-                            path="/privacidade"
-                            element={<PrivacyPolicy />}
                           />
                           <Route path="*" element={<NotFound />} />
                         </Routes>

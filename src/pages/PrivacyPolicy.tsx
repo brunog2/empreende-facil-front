@@ -1,120 +1,81 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PublicArticle } from "@/components/PublicArticle";
 
 export default function PrivacyPolicy() {
   return (
-    <div className="space-y-6 p-6 max-w-4xl mx-auto">
-      <div>
-        <h1 className="font-display text-3xl font-bold">Política de Privacidade</h1>
-        <p className="text-muted-foreground">Última atualização: {new Date().toLocaleDateString('pt-BR')}</p>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>1. Informações Coletadas</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-muted-foreground">
-            Coletamos as seguintes informações:
-          </p>
-          <ul className="list-disc list-inside space-y-2 text-muted-foreground ml-4">
-            <li>Dados de cadastro (nome, email, senha)</li>
-            <li>Informações do perfil (nome completo, nome do negócio, telefone)</li>
-            <li>Dados de negócio (produtos, vendas, despesas, clientes)</li>
-            <li>Informações de uso da plataforma</li>
-          </ul>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>2. Como Usamos Suas Informações</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-muted-foreground">
-            Utilizamos suas informações para:
-          </p>
-          <ul className="list-disc list-inside space-y-2 text-muted-foreground ml-4">
-            <li>Fornecer e melhorar nossos serviços</li>
-            <li>Processar transações e gerenciar sua conta</li>
-            <li>Enviar notificações importantes sobre o serviço</li>
-            <li>Garantir a segurança da plataforma</li>
-          </ul>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>3. Proteção de Dados</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-muted-foreground">
-            Implementamos medidas de segurança técnicas e organizacionais para proteger seus dados contra acesso não autorizado, alteração, divulgação ou destruição.
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>4. Compartilhamento de Informações</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-muted-foreground">
-            Não vendemos, trocamos ou transferimos suas informações pessoais para terceiros, exceto quando necessário para fornecer nossos serviços ou quando exigido por lei.
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>5. Seus Direitos</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-muted-foreground">
-            Você tem o direito de:
-          </p>
-          <ul className="list-disc list-inside space-y-2 text-muted-foreground ml-4">
-            <li>Acessar seus dados pessoais</li>
-            <li>Corrigir informações incorretas</li>
-            <li>Solicitar a exclusão de seus dados</li>
-            <li>Exportar seus dados</li>
-          </ul>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>6. Cookies</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-muted-foreground">
-            Utilizamos cookies e tecnologias similares para melhorar sua experiência, analisar o uso da plataforma e personalizar conteúdo.
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>7. Alterações nesta Política</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-muted-foreground">
-            Podemos atualizar esta política periodicamente. Notificaremos sobre mudanças significativas através da plataforma ou por email.
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>8. Contato</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-muted-foreground">
-            Para questões sobre privacidade ou para exercer seus direitos, entre em contato através dos canais de suporte disponíveis na plataforma.
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+    <PublicArticle
+      title="Política de privacidade"
+      intro="Esta política explica quais dados o Gestão Pro trata, para que servem e quais escolhas você tem sobre eles."
+      sections={[
+        {
+          title: "Quem trata os dados",
+          paragraphs: [
+            "O Gestão Pro é a plataforma de gestão para pequenos negócios. Os dados da sua conta e do seu negócio são tratados para prestar o serviço que você contratou.",
+          ],
+        },
+        {
+          title: "Dados que coletamos",
+          paragraphs: ["Coletamos apenas o que é necessário para a conta funcionar e para a gestão do negócio."],
+          items: [
+            "Cadastro: nome, e-mail e senha.",
+            "Perfil: nome do negócio e telefone, quando você informa.",
+            "Operação: produtos, estoque, vendas, despesas, clientes, categorias e relatórios gerados a partir desses registros.",
+            "Uso técnico: registros de acesso necessários para segurança e funcionamento da conta.",
+          ],
+        },
+        {
+          title: "Para que usamos",
+          paragraphs: ["Usamos esses dados para entregar o serviço e mantê-lo seguro."],
+          items: [
+            "Criar e autenticar a sua conta.",
+            "Registrar vendas, estoque, despesas e clientes.",
+            "Calcular totais, CMV e lucro dos produtos.",
+            "Enviar avisos sobre a conta, o plano e a segurança.",
+            "Cumprir obrigações legais quando houver.",
+          ],
+        },
+        {
+          title: "Com quem compartilhamos",
+          paragraphs: [
+            "Não vendemos dados pessoais. O compartilhamento acontece só com quem ajuda a operar a plataforma, como hospedagem e meio de pagamento, ou quando a lei exigir.",
+            "Os dados do seu negócio ficam vinculados à sua conta e não são misturados com os de outros clientes.",
+          ],
+        },
+        {
+          title: "Por quanto tempo guardamos",
+          paragraphs: [
+            "Mantemos os dados enquanto a conta existir e pelo período necessário para cumprir obrigações legais, resolver disputas e proteger o serviço. Quando a conta é encerrada, os dados são eliminados ou anonimizados, salvo o que a lei mandar conservar.",
+          ],
+        },
+        {
+          title: "Seus direitos",
+          paragraphs: ["Você pode pedir, a qualquer momento:"],
+          items: [
+            "Confirmação e acesso aos dados da conta.",
+            "Correção de informações incompletas ou desatualizadas.",
+            "Exclusão dos dados, quando a lei permitir.",
+            "Informação sobre com quem os dados foram compartilhados.",
+          ],
+        },
+        {
+          title: "Segurança",
+          paragraphs: [
+            "A senha é armazenada de forma protegida e o acesso à conta usa sessão autenticada. Nenhuma medida elimina todo risco: use uma senha forte e não compartilhe o acesso.",
+          ],
+        },
+        {
+          title: "Cookies",
+          paragraphs: [
+            "Usamos armazenamento local do navegador para manter a sessão autenticada e lembrar preferências da interface. Não usamos isso para vender publicidade.",
+          ],
+        },
+        {
+          title: "Atualizações e contato",
+          paragraphs: [
+            "Se esta política mudar de forma relevante, a nova versão passa a valer a partir da data publicada nesta página.",
+            "Para exercer um direito ou tirar dúvida sobre privacidade, use os canais oficiais do Gestão Pro indicados na plataforma.",
+          ],
+        },
+      ]}
+    />
   );
 }
-
-

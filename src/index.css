@@ -11,27 +11,27 @@ All colors MUST be HSL.
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 210 24% 16%;
+    --foreground: 210 30% 13%;
 
     --card: 0 0% 100%;
-    --card-foreground: 210 24% 16%;
+    --card-foreground: 210 30% 13%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 210 24% 16%;
+    --popover-foreground: 210 30% 13%;
 
-    --primary: 158 64% 42%;
+    --primary: 159 66% 33%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 17% 95%;
-    --secondary-foreground: 210 24% 16%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 210 30% 13%;
 
-    --muted: 210 17% 95%;
-    --muted-foreground: 210 12% 45%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 158 64% 42%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 155 69% 96%;
+    --accent-foreground: 159 64% 27%;
 
-    --success: 158 64% 42%;
+    --success: 159 63% 36%;
     --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
@@ -40,20 +40,20 @@ All colors MUST be HSL.
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 17% 90%;
-    --input: 210 17% 90%;
-    --ring: 158 64% 42%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 158 56% 53%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 210 24% 16%;
-    --sidebar-foreground: 210 17% 95%;
-    --sidebar-primary: 158 64% 42%;
+    --sidebar-background: 210 30% 13%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 159 66% 33%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 20% 22%;
-    --sidebar-accent-foreground: 158 64% 52%;
-    --sidebar-border: 210 17% 25%;
-    --sidebar-ring: 158 64% 42%;
+    --sidebar-accent: 210 24% 18%;
+    --sidebar-accent-foreground: 156 61% 68%;
+    --sidebar-border: 210 18% 22%;
+    --sidebar-ring: 158 56% 53%;
 
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
@@ -70,8 +70,8 @@ All colors MUST be HSL.
     --popover: 210 24% 13%;
     --popover-foreground: 210 17% 95%;
 
-    --primary: 158 64% 52%;
-    --primary-foreground: 210 24% 10%;
+    --primary: 158 56% 53%;
+    --primary-foreground: 210 30% 10%;
 
     --secondary: 210 20% 22%;
     --secondary-foreground: 210 17% 95%;
@@ -79,10 +79,10 @@ All colors MUST be HSL.
     --muted: 210 20% 22%;
     --muted-foreground: 210 12% 65%;
 
-    --accent: 158 64% 52%;
-    --accent-foreground: 210 24% 10%;
+    --accent: 159 30% 18%;
+    --accent-foreground: 156 61% 78%;
 
-    --success: 158 64% 52%;
+    --success: 158 56% 53%;
     --success-foreground: 210 24% 10%;
 
     --warning: 38 92% 50%;
@@ -116,6 +116,19 @@ All colors MUST be HSL.
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight;
+    @apply font-display font-bold tracking-tight;
   }
+
+  ::selection {
+    background: #b1eed4;
+    color: #17212b;
+  }
+}
+
+.hero-grid {
+  background-image:
+    linear-gradient(to right, rgba(23, 33, 43, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(23, 33, 43, 0.045) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(to bottom, black 0%, transparent 88%);
 }

@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { TrendingUp, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { MarketingChrome } from "@/components/MarketingChrome";
 import { PasswordField } from "@/components/PasswordField";
 import { strongPasswordSchema } from "@/lib/password";
 import { useForm } from "react-hook-form";
@@ -174,18 +175,17 @@ export default function Auth() {
   const signupPassword = signupForm.watch("password");
 
   return (
-    <div className="relative min-h-dvh overflow-x-hidden overflow-y-auto bg-sidebar">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,hsl(var(--primary)/0.55),transparent_32%),radial-gradient(circle_at_88%_12%,hsl(158_70%_70%/0.28),transparent_26%),radial-gradient(circle_at_72%_86%,hsl(var(--primary)/0.4),transparent_34%)]" />
-      <div className="pointer-events-none absolute inset-0 opacity-25 [background-image:linear-gradient(hsl(var(--sidebar-border))_1px,transparent_1px),linear-gradient(90deg,hsl(var(--sidebar-border))_1px,transparent_1px)] [background-size:56px_56px]" />
-      <div className="relative flex min-h-dvh items-start justify-center px-4 py-8 sm:items-center">
-      <Card className="w-full max-w-md border-sidebar-border shadow-2xl">
-        <CardHeader className="space-y-3 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-            <TrendingUp className="h-8 w-8 text-primary" />
-          </div>
-          <CardTitle className="font-display text-3xl">Gestão Pro</CardTitle>
+    <MarketingChrome>
+      <div className="hero-grid absolute inset-0 -z-10 opacity-70" />
+      <div className="pointer-events-none absolute left-[-10%] top-[-8%] -z-10 h-72 w-72 rounded-full bg-primary-200/50 blur-3xl" />
+      <div className="relative flex items-start justify-center px-4 py-8 sm:py-12">
+      <Card className="w-full max-w-md border-slate-200 shadow-card">
+        <CardHeader className="space-y-2 text-center">
+          <CardTitle className="font-display text-2xl text-ink">
+            {activeTab === "signup" ? "Crie sua conta" : "Entre na sua conta"}
+          </CardTitle>
           <CardDescription>
-            Gerencie seu negócio com simplicidade e eficiência
+            Vendas, estoque e lucro do negócio em um só lugar
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -316,6 +316,6 @@ export default function Auth() {
         </CardContent>
       </Card>
       </div>
-    </div>
+    </MarketingChrome>
   );
 }
