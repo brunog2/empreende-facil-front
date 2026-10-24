@@ -27,10 +27,16 @@ export interface AdvancedReport {
     revenue: string;
     expenses: string;
     costOfGoodsSold: string;
+    productProfit?: string;
     operatingResult: string;
     profit: string;
   }>;
-  topProducts: Array<{ name: string; revenue: string; quantity: number }>;
+  topProducts: Array<{
+    name: string;
+    revenue: string;
+    quantity: number;
+    profit?: string;
+  }>;
   salesByPaymentMethod: Array<{ name: string; total: string; count: number }>;
   expensesByCategory: Array<{ name: string; total: string }>;
   customerGrowth: Array<{ month: string; newCustomers: number }>;

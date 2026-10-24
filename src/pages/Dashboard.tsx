@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSales, useTopProducts } from "@/hooks/use-sales";
+import { useSales } from "@/hooks/use-sales";
 import { useExpenses } from "@/hooks/use-expenses";
 import { useLowStockProducts, useProducts } from "@/hooks/use-products";
 import { useCategories } from "@/hooks/use-categories";
@@ -38,6 +38,7 @@ import {
   X,
 } from "lucide-react";
 import { format } from "date-fns";
+import { countExpenseOccurrences } from "@/lib/recurring-expenses";
 import {
   BarChart,
   Bar,
@@ -85,8 +86,6 @@ export default function Dashboard() {
   const { data: expenses = [], isLoading: expensesLoading } = useExpenses();
   const { data: products = [] } = useProducts();
   const { data: categories = [] } = useCategories();
-  const { data: allTopProducts = [], isLoading: topProductsLoading } =
-    useTopProducts(5);
 
   // Helper para extrair apenas a data (YYYY-MM-DD) de uma string ISO, ignorando timezone
   const extractDateOnly = (isoString: string): string => {
@@ -184,28 +183,28 @@ export default function Dashboard() {
 
   // Filtrar top products baseado nos filtros
   const topProducts = useMemo(() => {
-    if (!hasActiveFilters) return allTopProducts;
-
-    // Calcular top products das vendas filtradas
     const productMap = new Map<
       string,
-      { name: string; quantity: number; revenue: number }
+      { name: string; quantity: number; revenue: number; profit: number }
     >();
 
     filteredSales.forEach((sale) => {
       sale.saleItems.forEach((item) => {
         const product = products.find((p) => p.id === item.productId);
-        if (!product) return;
-
-        const existing = productMap.get(item.productId) || {
-          name: product.name,
+        const key = item.productId || item.productName || item.id;
+        const existing = productMap.get(key) || {
+          name: product?.name || item.productName || "Produto removido",
           quantity: 0,
           revenue: 0,
+          profit: 0,
         };
 
         existing.quantity += item.quantity;
         existing.revenue += Number(item.subtotal);
-        productMap.set(item.productId, existing);
+        existing.profit +=
+          Number(item.subtotal) -
+          Number(item.productCostPrice) * Number(item.quantity);
+        productMap.set(key, existing);
       });
     });
 
@@ -215,15 +214,16 @@ export default function Dashboard() {
         productName: data.name,
         totalQuantity: data.quantity,
         totalRevenue: data.revenue,
+        totalProfit: data.profit,
       }))
       .sort((a, b) => b.totalRevenue - a.totalRevenue)
       .slice(0, 5);
-  }, [allTopProducts, filteredSales, products, hasActiveFilters]);
+  }, [filteredSales, products]);
   const { data: lowStockProducts = [], isLoading: lowStockLoading } =
     useLowStockProducts();
 
   const isLoading =
-    salesLoading || expensesLoading || topProductsLoading || lowStockLoading;
+    salesLoading || expensesLoading || lowStockLoading;
 
   // Calcular totais baseados nos filtros
   const filteredSalesTotal = useMemo(() => {
@@ -234,14 +234,16 @@ export default function Dashboard() {
   }, [filteredSales]);
 
   const filteredExpensesTotal = useMemo(() => {
-    return expenses
-      .filter((expense) => {
-        const expenseDate = extractDateOnly(expense.expenseDate);
-        if (startDate && expenseDate < startDate) return false;
-        if (endDate && expenseDate > endDate) return false;
-        return true;
-      })
-      .reduce((sum, expense) => sum + Number(expense.amount), 0);
+    return expenses.reduce((sum, expense) => {
+      const occurrences = countExpenseOccurrences(
+        expense.expenseDate,
+        expense.isRecurring,
+        expense.recurrencePeriod,
+        startDate || undefined,
+        endDate || undefined,
+      );
+      return sum + Number(expense.amount) * occurrences;
+    }, 0);
   }, [expenses, startDate, endDate]);
 
   // O custo gravado no item preserva o CMV mesmo que o produto seja alterado depois.
@@ -256,6 +258,7 @@ export default function Dashboard() {
     }, 0);
   }, [filteredSales]);
 
+  const productProfit = filteredSalesTotal - costOfGoodsSold;
   const operatingResult =
     filteredSalesTotal - filteredExpensesTotal - costOfGoodsSold;
   const recentSales = filteredSales.slice(0, 5);
@@ -581,7 +584,7 @@ export default function Dashboard() {
           </Card>
         )}
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <Card className="transition-shadow hover:shadow-lg border-green-200 bg-green-50/50 dark:bg-green-950/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
@@ -638,6 +641,30 @@ export default function Dashboard() {
               </div>
               <p className="text-xs text-muted-foreground">
                 Custo histórico dos itens vendidos
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="transition-shadow hover:shadow-lg border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">
+                Lucro dos produtos
+              </CardTitle>
+              <Package className="h-5 w-5 text-emerald-600" />
+            </CardHeader>
+            <CardContent>
+              <div
+                className={`text-2xl font-bold ${
+                  productProfit >= 0 ? "text-emerald-600" : "text-destructive"
+                }`}
+              >
+                {new Intl.NumberFormat("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                }).format(productProfit)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Faturamento menos o custo dos produtos vendidos
               </p>
             </CardContent>
           </Card>
@@ -758,7 +785,9 @@ export default function Dashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Produtos Mais Vendidos</CardTitle>
-              <CardDescription>Top 5 produtos por receita</CardDescription>
+              <CardDescription>
+                Top 5 produtos por receita, com o lucro de cada um
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {topProducts.length === 0 ? (
@@ -766,33 +795,47 @@ export default function Dashboard() {
                   Nenhum produto vendido ainda
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {topProducts.map((product, index) => (
-                    <div
-                      key={product.productId}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-                          {index + 1}
-                        </div>
-                        <div>
-                          <p className="font-medium">{product.productName}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {product.totalQuantity} unidade(s) vendida(s)
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-primary">
-                          {new Intl.NumberFormat("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                          }).format(product.totalRevenue)}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Produto</TableHead>
+                        <TableHead className="text-right">Qtd</TableHead>
+                        <TableHead className="text-right">Receita</TableHead>
+                        <TableHead className="text-right">Lucro</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {topProducts.map((product) => (
+                        <TableRow key={product.productId}>
+                          <TableCell className="font-medium">
+                            {product.productName}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {product.totalQuantity}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {new Intl.NumberFormat("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            }).format(product.totalRevenue)}
+                          </TableCell>
+                          <TableCell
+                            className={`text-right font-medium ${
+                              product.totalProfit >= 0
+                                ? "text-emerald-600"
+                                : "text-destructive"
+                            }`}
+                          >
+                            {new Intl.NumberFormat("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            }).format(product.totalProfit)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
               )}
             </CardContent>
@@ -818,6 +861,7 @@ export default function Dashboard() {
                         <TableHead>Data</TableHead>
                         <TableHead>Cliente</TableHead>
                         <TableHead className="text-right">Total</TableHead>
+                        <TableHead className="text-right">Lucro</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -845,6 +889,15 @@ export default function Dashboard() {
                           );
                         }
 
+                        const saleProfit = sale.saleItems.reduce(
+                          (sum, item) =>
+                            sum +
+                            (Number(item.unitPrice) -
+                              Number(item.productCostPrice)) *
+                              Number(item.quantity),
+                          0,
+                        );
+
                         return (
                           <TableRow key={sale.id}>
                             <TableCell>
@@ -858,6 +911,18 @@ export default function Dashboard() {
                                 style: "currency",
                                 currency: "BRL",
                               }).format(sale.totalAmount)}
+                            </TableCell>
+                            <TableCell
+                              className={`text-right font-medium ${
+                                saleProfit >= 0
+                                  ? "text-emerald-600"
+                                  : "text-destructive"
+                              }`}
+                            >
+                              {new Intl.NumberFormat("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              }).format(saleProfit)}
                             </TableCell>
                           </TableRow>
                         );

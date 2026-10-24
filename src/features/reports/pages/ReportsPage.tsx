@@ -46,7 +46,10 @@ import {
   formatDate,
   formatMoney,
 } from "@/features/subscriptions/utils/subscription-utils";
+import { useExpenses } from "@/hooks/use-expenses";
+import { useSales } from "@/hooks/use-sales";
 import { getErrorMessage } from "@/lib/api";
+import { countExpenseOccurrences, dateOnly } from "@/lib/recurring-expenses";
 import { FeatureUpgradeCard } from "../components/FeatureUpgradeCard";
 import {
   useAdvancedReport,
@@ -80,6 +83,8 @@ export default function ReportsPage() {
   const canExport = canAccessFeature("dataExport");
   const canBackup = canAccessFeature("automaticBackup");
   const summary = useReportSummary(period);
+  const sales = useSales();
+  const expenses = useExpenses();
   const advanced = useAdvancedReport(period, canUseAdvanced);
   const exportReport = useExportReport();
   const backups = useBackups(canBackup);
@@ -93,17 +98,64 @@ export default function ReportsPage() {
         faturamento: Number(item.revenue),
         despesas: Number(item.expenses),
         cmv: Number(item.costOfGoodsSold),
+        lucro: Number(item.productProfit ?? Number(item.revenue) - Number(item.costOfGoodsSold)),
         resultado: Number(item.operatingResult),
       })) ?? [],
     [advanced.data],
   );
+  const projectedExpenses = useMemo(
+    () =>
+      (expenses.data ?? []).reduce((sum, expense) => {
+        return (
+          sum +
+          Number(expense.amount) *
+            countExpenseOccurrences(
+              expense.expenseDate,
+              expense.isRecurring,
+              expense.recurrencePeriod,
+              period.startDate,
+              period.endDate,
+            )
+        );
+      }, 0),
+    [expenses.data, period.endDate, period.startDate],
+  );
+  const productRows = useMemo(() => {
+    const rows = new Map<
+      string,
+      { name: string; quantity: number; revenue: number; profit: number }
+    >();
+    for (const sale of sales.data ?? []) {
+      const saleDate = dateOnly(sale.saleDate);
+      if (saleDate < period.startDate || saleDate > period.endDate) continue;
+      for (const item of sale.saleItems ?? []) {
+        const key = item.productId || item.productName || item.id;
+        const current = rows.get(key) ?? {
+          name: item.productName || item.product?.name || "Produto removido",
+          quantity: 0,
+          revenue: 0,
+          profit: 0,
+        };
+        current.quantity += Number(item.quantity);
+        current.revenue += Number(item.subtotal);
+        current.profit +=
+          Number(item.subtotal) -
+          Number(item.productCostPrice) * Number(item.quantity);
+        rows.set(key, current);
+      }
+    }
+    return Array.from(rows.entries())
+      .map(([id, row]) => ({ id, ...row }))
+      .sort((left, right) => right.profit - left.profit);
+  }, [period.endDate, period.startDate, sales.data]);
   const topProducts = useMemo(
     () =>
-      advanced.data?.topProducts.map((item) => ({
-        ...item,
-        receita: Number(item.revenue),
-      })) ?? [],
-    [advanced.data],
+      productRows.slice(0, 10).map((item) => ({
+        name: item.name,
+        receita: item.revenue,
+        lucro: item.profit,
+      })),
+    [productRows],
   );
 
   const runExport = async (format: "xlsx" | "pdf") => {
@@ -132,9 +184,14 @@ export default function ReportsPage() {
           icon: TrendingUp,
         },
         {
-          label: "Despesas",
-          value: formatMoney(summary.data.summary.expenses),
-          icon: Receipt,
+          label: "Lucro dos produtos",
+          value: formatMoney(
+            (
+              Number(summary.data.summary.revenue) -
+              Number(summary.data.summary.costOfGoodsSold)
+            ).toFixed(2),
+          ),
+          icon: TrendingUp,
         },
         {
           label: "CMV",
@@ -142,8 +199,19 @@ export default function ReportsPage() {
           icon: PackageSearch,
         },
         {
+          label: "Despesas",
+          value: formatMoney(projectedExpenses.toFixed(2)),
+          icon: Receipt,
+        },
+        {
           label: "Resultado operacional estimado",
-          value: formatMoney(summary.data.summary.operatingResult),
+          value: formatMoney(
+            (
+              Number(summary.data.summary.revenue) -
+              projectedExpenses -
+              Number(summary.data.summary.costOfGoodsSold)
+            ).toFixed(2),
+          ),
           icon: BarChart3,
         },
         {
@@ -224,7 +292,7 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {summaryCards.map((item) => (
             <Card key={item.label}>
               <CardContent className="flex items-center justify-between p-5">
@@ -240,6 +308,59 @@ export default function ReportsPage() {
           ))}
         </div>
       )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Lucro por produto</CardTitle>
+          <CardDescription>
+            Receita de cada produto menos o custo gravado na venda.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {sales.isLoading ? (
+            <div className="h-32 animate-pulse rounded bg-muted" />
+          ) : productRows.length === 0 ? (
+            <p className="py-8 text-center text-muted-foreground">
+              Nenhum produto vendido neste período.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Produto</TableHead>
+                    <TableHead className="text-right">Qtd</TableHead>
+                    <TableHead className="text-right">Receita</TableHead>
+                    <TableHead className="text-right">Lucro</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {productRows.map((product) => (
+                    <TableRow key={product.id}>
+                      <TableCell className="font-medium">{product.name}</TableCell>
+                      <TableCell className="text-right">
+                        {product.quantity}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatMoney(product.revenue.toFixed(2))}
+                      </TableCell>
+                      <TableCell
+                        className={`text-right font-medium ${
+                          product.profit >= 0
+                            ? "text-emerald-600"
+                            : "text-destructive"
+                        }`}
+                      >
+                        {formatMoney(product.profit.toFixed(2))}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <section className="space-y-4">
         <div>
@@ -263,8 +384,8 @@ export default function ReportsPage() {
               <CardHeader>
                 <CardTitle>Evolução financeira</CardTitle>
                 <CardDescription>
-                  Faturamento, despesas, CMV e resultado operacional estimado
-                  por mês.
+                  Faturamento, despesas, CMV, lucro dos produtos e resultado
+                  operacional estimado por mês.
                 </CardDescription>
               </CardHeader>
               <CardContent className="h-80">
@@ -301,6 +422,13 @@ export default function ReportsPage() {
                       dataKey="cmv"
                       name="CMV"
                       stroke="#f59e0b"
+                      strokeWidth={2}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="lucro"
+                      name="Lucro dos produtos"
+                      stroke="#10b981"
                       strokeWidth={2}
                     />
                     <Line
@@ -346,7 +474,14 @@ export default function ReportsPage() {
                     />
                     <Bar
                       dataKey="receita"
+                      name="Receita"
                       fill="hsl(var(--primary))"
+                      radius={[0, 4, 4, 0]}
+                    />
+                    <Bar
+                      dataKey="lucro"
+                      name="Lucro"
+                      fill="#10b981"
                       radius={[0, 4, 4, 0]}
                     />
                   </BarChart>
